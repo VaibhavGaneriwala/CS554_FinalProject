@@ -56,7 +56,7 @@ export const minioUtils = {
             throw error;
         }
     },
-    async generatefileName(originalName: string, userId: string): string {
+    generatefileName(originalName: string, userId: string): string {
         const timestamp = Date.now();
         const extension = originalName.split('.').pop();
         return `${userId}-${timestamp}.${extension}`;
