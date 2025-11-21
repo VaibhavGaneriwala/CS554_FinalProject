@@ -1,10 +1,9 @@
 import express, {Request, Response} from 'express';
-import {body, param, query} from 'express-validator';
+import {body, param} from 'express-validator';
 import {Workout} from '../models/index';
 import {authenticate} from '../middleware/auth';
 import {handleValidationErrors, isValidObjectId} from '../utils/validation';
 import {cacheUtils} from '../config/redis';
-import { channel } from 'diagnostics_channel';
 
 const router = express.Router();
 

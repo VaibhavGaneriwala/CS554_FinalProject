@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import mongoose from "mongoose";
 
-const errorHandler = (error: any, req: Request, res: Response, next: NextFunction): void => {
+const errorHandler = (error: any, _req: Request, res: Response, _next: NextFunction): void => {
     console.error("Error:", error);
     if (error instanceof mongoose.Error.ValidationError){
         const messages = Object.values(error.errors).map((err) => err.message);
@@ -21,12 +21,11 @@ const errorHandler = (error: any, req: Request, res: Response, next: NextFunctio
         res.status(401).json({success: false, message: 'Token expired'});
         return;
     }
-    res.status(error.statusCode || 500).json({success: false, message: error.message || 'Internal Server Error', ...error(process.env.NODE_ENV) === 'development' && {stack: error.stack}});
+    res.status(error.statusCode || 500).json({success: false, message: error.message || 'Internal Server Error', ...(process.env.NODE_ENV === 'development' && {stack: error.stack})});
 };
 
-const notFoundHandler = (req: Request, res: Response, next: NextFunction): void => {
+const notFoundHandler = (req: Request, res: Response, _next: NextFunction): void => {
     res.status(404).json({success: false, message: `Route  ${req.originalUrl} not found`});
 };
 
-
-export default {errorHandler, notFoundHandler};
+export {errorHandler, notFoundHandler};

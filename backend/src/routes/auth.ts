@@ -65,7 +65,7 @@ router.get('/me', authenticate, async (req: Request, res: Response): Promise<voi
             res.status(404).json({success: false, message: 'User not found'});
             return;
         }
-        res.status(200).json({success: true, data: {id: user._id, name: user.name, email: user.email, age: user.age, height: user.height, weight: user.height, profilePicture: user.profilePicture}});
+        res.status(200).json({success: true, data: {id: user._id, name: user.name, email: user.email, age: user.age, height: user.height, weight: user.weight, profilePicture: user.profilePicture}});
     } catch (error) {
         res.status(500).json({success: false, message: 'Error fetching user', error: error instanceof Error ? error.message: 'Unknown error'});
     }
