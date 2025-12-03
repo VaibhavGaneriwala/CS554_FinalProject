@@ -32,13 +32,11 @@ const Register: React.FC = () => {
         setError('');
         setLoading(true);
         try {
-            // Filter out undefined/null/empty optional fields
             const registrationData: RegisterData = {
                 name: formData.name.trim(),
                 email: formData.email.trim(),
                 password: formData.password,
             };
-            // Only include numeric fields if they have valid values
             if (formData.age !== undefined && formData.age !== null && !isNaN(formData.age) && formData.age > 0) {
                 registrationData.age = formData.age;
             }

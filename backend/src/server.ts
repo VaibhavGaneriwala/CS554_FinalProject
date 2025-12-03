@@ -18,20 +18,13 @@ dotenv.config();
 const app: Application = express();
 const PORT = parseInt(process.env.PORT || '3000', 10);
 
-const allowedOrigins = process.env.CORS_ORIGIN 
-    ? process.env.CORS_ORIGIN.split(',').map(origin => origin.trim())
-    : [];
+const allowedOrigins = process.env.CORS_ORIGIN ? process.env.CORS_ORIGIN.split(',').map(origin => origin.trim()): [];
 
 app.use(cors({
     origin: (origin, callback) => {
-        if (!origin) {
-            return callback(null, true);
-        }
-        if (allowedOrigins.includes(origin)) {
-            callback(null, true);
-        } else {
-            callback(new Error(`Not allowed by CORS. Origin: ${origin}`));
-        }
+        if (!origin) return callback(null, true);
+        if (allowedOrigins.includes(origin)) return callback(null, true);
+        callback(new Error(`Not allowed by CORS. Origin: ${origin}`));
     },
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
@@ -61,19 +54,9 @@ app.use(errorHandler);
 const startServer = async () => {
     try {
         await connectDB();
-        
-        try {
-            await redisClient.connect();
-            await redisClient.ping();
-        } catch {
-            // Redis is optional
-        }
-        
-        try {
-            await initMinIO();
-        } catch {
-            // MinIO is optional
-        }
+        await redisClient.connect();
+        await redisClient.ping();
+        await initMinIO();
         
         app.listen(PORT, '0.0.0.0', () => {
             console.log(`Server running on port ${PORT}`);

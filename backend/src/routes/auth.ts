@@ -31,7 +31,6 @@ router.post('/register', registerValidation, handleValidationErrors, async (req:
             return;
         }
         
-        // Build user data object, only including defined optional fields
         const userData: any = {name, email, password};
         if (age !== undefined && age !== null) userData.age = age;
         if (height !== undefined && height !== null) userData.height = height;

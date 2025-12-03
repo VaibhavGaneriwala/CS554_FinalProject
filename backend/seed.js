@@ -90,19 +90,19 @@ const Post = mongoose.model('Post', PostSchema);
 
 const seedData = async () => {
   try {
-    console.log('🌱 Starting database seed...\n');
+    console.log('Starting database seed...');
 
     await mongoose.connect(MONGODB_URI);
-    console.log('✅ Connected to MongoDB\n');
+    console.log('Connected to MongoDB');
 
     await User.deleteMany({});
     await Workout.deleteMany({});
     await Meal.deleteMany({});
     await Progress.deleteMany({});
     await Post.deleteMany({});
-    console.log('🗑️  Cleared existing data\n');
+    console.log('Cleared existing data');
 
-    console.log('👥 Creating users...');
+    console.log('Creating users...');
     const hashedPassword = await bcrypt.hash('password123', 10);
     
     const users = await User.insertMany([
@@ -117,9 +117,9 @@ const seedData = async () => {
       { name: 'James Martinez', email: 'james@example.com', password: hashedPassword, age: 31, height: 182, weight: 85 },
       { name: 'Lisa Anderson', email: 'lisa@example.com', password: hashedPassword, age: 23, height: 163, weight: 58 },
     ]);
-    console.log(`✅ Created ${users.length} users\n`);
+    console.log(`Created ${users.length} users`);
 
-    console.log('🏋️  Creating workouts...');
+    console.log('Creating workouts...');
     const workouts = await Workout.insertMany([
       {
         userId: users[0]._id.toString(),
@@ -251,9 +251,9 @@ const seedData = async () => {
         notes: 'Ab burner!',
       },
     ]);
-    console.log(`✅ Created ${workouts.length} workouts\n`);
+    console.log(`Created ${workouts.length} workouts`);
 
-    console.log('🍽️  Creating meals...');
+    console.log('Creating meals...');
     const meals = await Meal.insertMany([
       {
         userId: users[0]._id.toString(),
@@ -336,9 +336,9 @@ const seedData = async () => {
         date: new Date('2025-11-29'),
       },
     ]);
-    console.log(`✅ Created ${meals.length} meals\n`);
+    console.log(`Created ${meals.length} meals`);
 
-    console.log('📊 Creating progress entries...');
+    console.log('Creating progress entries...');
     const progressEntries = await Progress.insertMany([
       {
         userId: users[0]._id.toString(),
@@ -415,9 +415,9 @@ const seedData = async () => {
         notes: '50kg press!',
       },
     ]);
-    console.log(`✅ Created ${progressEntries.length} progress entries\n`);
+    console.log(`Created ${progressEntries.length} progress entries`);
 
-    console.log('📝 Creating posts...');
+    console.log('Creating posts...');
     const posts = await Post.insertMany([
       {
         userId: users[0]._id.toString(),
@@ -511,22 +511,17 @@ const seedData = async () => {
         ],
       },
     ]);
-    console.log(`✅ Created ${posts.length} posts\n`);
+    console.log(`Created ${posts.length} posts`);
 
-    console.log('✅ Database seeded successfully!\n');
-    console.log('📊 Summary:');
-    console.log(`   - ${users.length} users`);
-    console.log(`   - ${workouts.length} workouts`);
-    console.log(`   - ${meals.length} meals`);
-    console.log(`   - ${progressEntries.length} progress entries`);
-    console.log(`   - ${posts.length} posts`);
-    console.log('\n🔐 Default password for all users: password123');
+    console.log('Database seeded successfully!');
+    console.log(`Summary: ${users.length} users, ${workouts.length} workouts, ${meals.length} meals, ${progressEntries.length} progress entries, ${posts.length} posts`);
+    console.log('Default password for all users: password123');
 
   } catch (error) {
-    console.error('❌ Error seeding database:', error);
+    console.error('Error seeding database:', error);
   } finally {
     await mongoose.connection.close();
-    console.log('\n👋 Disconnected from MongoDB');
+    console.log('Disconnected from MongoDB');
     process.exit(0);
   }
 };
