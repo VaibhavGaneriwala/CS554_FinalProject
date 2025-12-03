@@ -29,13 +29,11 @@ const NutritionInfoSchema = new Schema<INutritionInfo>(
         },
         fiber: {
             type: Number,
-            required: [true, 'Fiber is required'],
             min: [0, 'Fiber must be at least 0'],
             max: [100, 'Fiber cannot exceed 100'],
         },
         sugar: {
             type: Number,
-            required: [true, 'Sugar is required'],
             min: [0, 'Sugar must be at least 0'],
             max: [100, 'Sugar cannot exceed 100'],
         },

@@ -39,13 +39,11 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
                 authService.setStoredUser(response.data);
               }
             } catch (error) {
-              console.error('Failed to fetch user:', error);
               authService.logout();
             }
           }
         }
       } catch (error) {
-        console.error('Auth initialization error:', error);
         authService.logout();
       } finally {
         if (mounted) {
@@ -61,6 +59,17 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     };
   }, []);
 
+  const handleAuthError = (error: any, defaultMessage: string): never => {
+    const errorData = error.response?.data;
+    if (errorData?.errors && Array.isArray(errorData.errors)) {
+      throw new Error(errorData.errors.join(', '));
+    }
+    if (error.code === 'ERR_NETWORK' || error.message === 'Network Error') {
+      throw new Error('Cannot connect to the server. Please make sure the backend server is running.');
+    }
+    throw new Error(errorData?.message || error.message || defaultMessage);
+  };
+
   const login = async (credentials: LoginCredentials) => {
     try {
       const response = await authService.login(credentials);
@@ -73,12 +82,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         throw new Error(response.message || 'Login failed');
       }
     } catch (error: any) {
-      console.error('Login error:', error);
-      const errorData = error.response?.data;
-      if (errorData?.errors && Array.isArray(errorData.errors)) {
-        throw new Error(errorData.errors.join(', '));
-      }
-      throw new Error(errorData?.message || error.message || 'Login failed');
+      handleAuthError(error, 'Login failed');
     }
   };
 
@@ -94,13 +98,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         throw new Error(response.message || 'Registration failed');
       }
     } catch (error: any) {
-      console.error('Registration error:', error);
-      // Extract validation errors if they exist
-      const errorData = error.response?.data;
-      if (errorData?.errors && Array.isArray(errorData.errors)) {
-        throw new Error(errorData.errors.join(', '));
-      }
-      throw new Error(errorData?.message || error.message || 'Registration failed');
+      handleAuthError(error, 'Registration failed');
     }
   };
 

@@ -30,9 +30,16 @@ router.post('/register', registerValidation, handleValidationErrors, async (req:
             res.status(400).json({success: false, message: 'User already exists'});
             return;
         }
-        const user = await User.create({name, email, password, age, height, weight});
-        const token = jwtUtils.generateToken({userId: user._id, email: user.email});
-        res.status(201).json({success: true, message: 'User registered successfully', data: {token, user: {id: user._id, name: user.name, email: user.email, age: user.age, height: user.height, weight: user.weight}}});
+        
+        // Build user data object, only including defined optional fields
+        const userData: any = {name, email, password};
+        if (age !== undefined && age !== null) userData.age = age;
+        if (height !== undefined && height !== null) userData.height = height;
+        if (weight !== undefined && weight !== null) userData.weight = weight;
+        
+        const user = await User.create(userData);
+        const token = jwtUtils.generateToken({userId: user._id.toString(), email: user.email});
+        res.status(201).json({success: true, message: 'User registered successfully', data: {token, user: {id: user._id.toString(), name: user.name, email: user.email, age: user.age, height: user.height, weight: user.weight}}});
     } catch (error) {
         res.status(500).json({success: false, message: 'Error registering user', error: error instanceof Error ? error.message: 'Unknown error'});
     }
@@ -51,8 +58,8 @@ router.post('/login', loginValidation, handleValidationErrors, async (req: Reque
             res.status(401).json({success: false, message: 'Invalid email or password'});
             return;
         }
-        const token = jwtUtils.generateToken({userId: user._id, email: user.email});
-        res.status(200).json({success: true, message: 'Login successful', data: {token, user: {id: user._id, name: user.name, email: user.email, age: user.age, height: user.height, weight: user.weight, profilePicture: user.profilePicture}}});
+        const token = jwtUtils.generateToken({userId: user._id.toString(), email: user.email});
+        res.status(200).json({success: true, message: 'Login successful', data: {token, user: {id: user._id.toString(), name: user.name, email: user.email, age: user.age, height: user.height, weight: user.weight, profilePicture: user.profilePicture}}});
     } catch (error) {
         res.status(500).json({success: false, message: 'Error logging in', error: error instanceof Error ? error.message: 'Unknown error'});
     }
@@ -65,7 +72,7 @@ router.get('/me', authenticate, async (req: Request, res: Response): Promise<voi
             res.status(404).json({success: false, message: 'User not found'});
             return;
         }
-        res.status(200).json({success: true, data: {id: user._id, name: user.name, email: user.email, age: user.age, height: user.height, weight: user.weight, profilePicture: user.profilePicture}});
+        res.status(200).json({success: true, data: {id: user._id.toString(), name: user.name, email: user.email, age: user.age, height: user.height, weight: user.weight, profilePicture: user.profilePicture}});
     } catch (error) {
         res.status(500).json({success: false, message: 'Error fetching user', error: error instanceof Error ? error.message: 'Unknown error'});
     }

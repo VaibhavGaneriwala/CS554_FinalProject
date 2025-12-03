@@ -16,11 +16,26 @@ import postRoutes from './routes/posts';
 dotenv.config();
 
 const app: Application = express();
-const PORT = process.env.PORT || 3000;
+const PORT = parseInt(process.env.PORT || '3000', 10);
+
+const allowedOrigins = process.env.CORS_ORIGIN 
+    ? process.env.CORS_ORIGIN.split(',').map(origin => origin.trim())
+    : [];
 
 app.use(cors({
-    origin: process.env.CORS_ORIGIN || 'http://localhost:3000',
+    origin: (origin, callback) => {
+        if (!origin) {
+            return callback(null, true);
+        }
+        if (allowedOrigins.includes(origin)) {
+            callback(null, true);
+        } else {
+            callback(new Error(`Not allowed by CORS. Origin: ${origin}`));
+        }
+    },
     credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
 }));
 app.use(express.json());
 app.use(express.urlencoded({extended: true}));
@@ -46,12 +61,23 @@ app.use(errorHandler);
 const startServer = async () => {
     try {
         await connectDB();
-        await redisClient.ping();
-        await initMinIO();
-        app.listen(PORT, () => {console.log(`Server is running on port ${PORT}`)});
-        console.log('MongoDB connected');
-        console.log('Redis connected');
-        console.log('MinIO connected');
+        
+        try {
+            await redisClient.connect();
+            await redisClient.ping();
+        } catch {
+            // Redis is optional
+        }
+        
+        try {
+            await initMinIO();
+        } catch {
+            // MinIO is optional
+        }
+        
+        app.listen(PORT, '0.0.0.0', () => {
+            console.log(`Server running on port ${PORT}`);
+        });
     } catch (error) {
         console.error('Error starting server:', error);
         process.exit(1);
@@ -64,7 +90,6 @@ process.on('unhandledRejection', (err: Error) => {
 });
 
 process.on('SIGTERM', () => {
-    console.log('SIGTERM signal received. Shutting down gracefully...');
     process.exit(0);
 });
 
