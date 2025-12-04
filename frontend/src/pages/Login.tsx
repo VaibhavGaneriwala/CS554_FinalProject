@@ -28,9 +28,11 @@ const Login: React.FC = () => {
     };
     return (
         <div className="auth-container">
+            <h1 className="auth-page-title">Fitness and Calorie Tracker</h1>
             <div className='auth-split'>
                 <div className='auth-image-side'>
                     <div className='auth-overlay'>
+                        <img src="/logo_app.png" alt="Fitness and Calorie Tracker" className='auth-logo' />
                         <h1 className='auth-tagline'>Track your Progress, <br />Achieve Your Goals</h1>
                     </div>
                 </div>
@@ -41,11 +43,11 @@ const Login: React.FC = () => {
                         {error && (<div className='auth-error'>{error}</div>)}
                         <form onSubmit={handleSubmit} className='auth-form'>
                             <div className='form-group'>
-                                <label htmlFor="email">Email</label>
+                                <label htmlFor="email">Email <span className="required-asterisk">*</span></label>
                                 <input id='email' type='email' value={email} onChange={(e) => setEmail(e.target.value)} placeholder='Enter your email' required className='form-input' />
                             </div>
                             <div className='form-group'>
-                                <label htmlFor="password">Password</label>
+                                <label htmlFor="password">Password <span className="required-asterisk">*</span></label>
                                 <div className='password-input-wrapper'>
                                 <input id="password" type={showPassword ? 'text' : 'password'} value={password} onChange={(e) => setPassword(e.target.value)} placeholder='Enter your password' required className='form-input' />
                                 <button type='button' className='password-toggle' onClick={() => setShowPassword(!showPassword)}>{showPassword ? '👁️' : '👁️‍🗨️'}</button>

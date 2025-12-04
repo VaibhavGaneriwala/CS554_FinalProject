@@ -16,7 +16,10 @@ router.get('/', async (req: Request, res: Response): Promise<void> => {
 
         const query: any = {};
         if (search){
-            query.name = { $regex: search, $options: 'i'};
+            query.$or = [
+                { firstName: { $regex: search, $options: 'i' } },
+                { lastName: { $regex: search, $options: 'i' } }
+            ];
         }
         const cacheKey = `users:page:${pageNum}:limit:${limitNum}:search:${search || 'none'}`;
         const cachedData = await cacheUtils.get(cacheKey);
@@ -48,7 +51,7 @@ router.get(
                 res.status(200).json({success: true, data: cachedUser, cached: true});
                 return;
             }
-            const user = await User.findById(userId).select('name email age height weight profilePicture createdAt');
+            const user = await User.findById(userId).select('firstName lastName email age height weight profilePicture createdAt');
             if (!user){
                 res.status(404).json({success: false, message: 'User not found'});
                 return;
@@ -63,22 +66,23 @@ router.get(
 
 router.put(
     '/profile', authenticate, [
-        body('name').optional().trim().isLength({min: 2, max: 50}).withMessage('Name must be between 2 and 50 characters'),
+        body('firstName').optional().trim().isLength({min: 2, max: 50}).withMessage('First name must be between 2 and 50 characters'),
+        body('lastName').optional().trim().isLength({min: 2, max: 50}).withMessage('Last name must be between 2 and 50 characters'),
         body('age').optional().isInt({min: 16, max: 120}).withMessage('Age must be between 16 and 120'),
         body('height').optional().isFloat({min: 50, max: 300}).withMessage('Height must be between 50 and 300cm'),
         body('weight').optional().isFloat({min: 20, max: 500}).withMessage('Weight must be between 20 and 500kg'),
         body('profilePicture').optional().isURL().withMessage('Invalid profile picture URL'),
     ], handleValidationErrors, async (req: Request, res: Response): Promise<void> => {
         try {
-            const {name, age, height, weight} = req.body;
+            const {firstName, lastName, age, height, weight} = req.body;
             const userId = req.user?.userId;
-            const user = await User.findByIdAndUpdate(userId, {...(name && {name}), ...(age && {age}), ...(height && {height}), ...(weight && {weight}),}, {new: true, runValidators: true});
+            const user = await User.findByIdAndUpdate(userId, {...(firstName && {firstName}), ...(lastName && {lastName}), ...(age && {age}), ...(height && {height}), ...(weight && {weight}),}, {new: true, runValidators: true});
             if (!user){
                 res.status(404).json({success: false, message: 'User not found'});
                 return;
             }
             await cacheUtils.del(`user:${userId}`);
-            res.status(200).json({success: true, message: 'Profile updated successfully', data: {id: user._id, name: user.name, email: user.email, age: user.age, height: user.height, weight: user.weight, profilePicture: user.profilePicture}});
+            res.status(200).json({success: true, message: 'Profile updated successfully', data: {id: user._id, firstName: user.firstName, lastName: user.lastName, email: user.email, age: user.age, height: user.height, weight: user.weight, profilePicture: user.profilePicture}});
         } catch (error) {
             res.status(500).json({success: false, message: 'Error updating profile', error: error instanceof Error ? error.message : 'Unknown error'});
         }

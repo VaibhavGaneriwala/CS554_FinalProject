@@ -6,16 +6,19 @@ import './Auth.css';
 
 const Register: React.FC = () => {
     const [formData, setFormData] = useState<RegisterData>({
-        name: '',
+        firstName: '',
+        lastName: '',
         email: '',
         password: '',
         age: undefined,
         height: undefined,
         weight: undefined
     });
+    const [confirmPassword, setConfirmPassword] = useState('');
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const {register} = useAuth();
     const navigate = useNavigate();
 
@@ -30,10 +33,17 @@ const Register: React.FC = () => {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setError('');
+        
+        if (formData.password !== confirmPassword) {
+            setError('Passwords do not match');
+            return;
+        }
+        
         setLoading(true);
         try {
             const registrationData: RegisterData = {
-                name: formData.name.trim(),
+                firstName: formData.firstName.trim(),
+                lastName: formData.lastName.trim(),
                 email: formData.email.trim(),
                 password: formData.password,
             };
@@ -57,47 +67,60 @@ const Register: React.FC = () => {
     };
     return (
         <div className='auth-container'>
+            <h1 className="auth-page-title">Fitness and Calorie Tracker</h1>
             <div className='auth-split'>
                 <div className='auth-image-side'>
                     <div className='auth-overlay'>
+                        <img src="/logo_app.png" alt="Fitness and Calorie Tracker" className='auth-logo' />
                         <h1 className='auth-tagline'>Start Your Fitness<br />Journey Today</h1>
                     </div>
                 </div>
                 <div className='auth-form-side'>
                     <div className='auth-form-container'>
-                        <h2 className='auth-title'>Create Your Account</h2>
+                        <h2 className='auth-title'>Create Your Account Today!</h2>
                         <p className='auth-subtitle'>Already have an account? <Link to="/login" className='auth-link'>Login</Link></p>
                         {error && (<div className='auth-error'>{error}</div>)}
                         <form onSubmit={handleSubmit} className='auth-form'>
                             <div className='form-row'>
                                 <div className='form-group'>
-                                    <label htmlFor="name">Name</label>
-                                    <input id='name' type="text" name='name' value={formData.name} onChange={handleChange} placeholder='Enter your name' required className='form-input' />
+                                    <label htmlFor="firstName">First Name <span className="required-asterisk">*</span></label>
+                                    <input id='firstName' type="text" name='firstName' value={formData.firstName} onChange={handleChange} placeholder='Enter your first name' required className='form-input' />
                                 </div>
+                                <div className='form-group'>
+                                    <label htmlFor="lastName">Last Name <span className="required-asterisk">*</span></label>
+                                    <input id='lastName' type="text" name='lastName' value={formData.lastName} onChange={handleChange} placeholder='Enter your last name' required className='form-input' />
+                                </div>
+                            </div>
+                            <div className='form-group'>
+                                <label htmlFor="email">Email <span className="required-asterisk">*</span></label>
+                                <input id='email' type="email" name='email' value={formData.email} onChange={handleChange} placeholder='Enter your email' required className='form-input' />
+                            </div>
+                            <div className='form-group'>
+                                <label htmlFor="password">Password <span className="required-asterisk">*</span></label>
+                                <div className='password-input-wrapper'>
+                                    <input id='password' type={showPassword ? 'text' : 'password'} name='password' value={formData.password} onChange={handleChange} placeholder='Enter your password' required className='form-input' />
+                                    <button type='button' className='password-toggle' onClick={() => setShowPassword(!showPassword)}>{showPassword ? '👁️' : '👁️‍🗨️'}</button>
+                                </div>
+                            </div>
+                            <div className='form-group'>
+                                <label htmlFor="confirmPassword">Confirm Password <span className="required-asterisk">*</span></label>
+                                <div className='password-input-wrapper'>
+                                    <input id='confirmPassword' type={showConfirmPassword ? 'text' : 'password'} value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} placeholder='Confirm your password' required className='form-input' />
+                                    <button type='button' className='password-toggle' onClick={() => setShowConfirmPassword(!showConfirmPassword)}>{showConfirmPassword ? '👁️' : '👁️‍🗨️'}</button>
+                                </div>
+                            </div>
+                            <div className='form-row form-row-three'>
                                 <div className='form-group'>
                                     <label htmlFor="age">Age</label>
                                     <input id='age' type="number" name='age' value={formData.age || ''} onChange={handleChange} placeholder='Enter your age (optional)' className='form-input' />
                                 </div>
                                 <div className='form-group'>
-                                    <label htmlFor="email">Email</label>
-                                    <input id='email' type="email" name='email' value={formData.email} onChange={handleChange} placeholder='Enter your email' required className='form-input' />
+                                    <label htmlFor="height">Height</label>
+                                    <input id='height' type="number" name='height' value={formData.height || ''} onChange={handleChange} placeholder='Enter your height (optional) in cm' className='form-input' />
                                 </div>
                                 <div className='form-group'>
-                                    <label htmlFor="password">Password</label>
-                                    <div className='password-input-wrapper'>
-                                        <input id='password' type={showPassword ? 'text' : 'password'} name='password' value={formData.password} onChange={handleChange} placeholder='Enter your password' required className='form-input' />
-                                        <button type='button' className='password-toggle' onClick={() => setShowPassword(!showPassword)}>{showPassword ? '👁️' : '👁️‍🗨️'}</button>
-                                    </div>
-                                </div>
-                                <div className='form-row'>
-                                    <div className='form-group'>
-                                        <label htmlFor="height">Height</label>
-                                        <input id='height' type="number" name='height' value={formData.height || ''} onChange={handleChange} placeholder='Enter your height (optional) in cm' className='form-input' />
-                                    </div>
-                                    <div className='form-group'>
-                                        <label htmlFor="weight">Weight</label>
-                                        <input id='weight' type="number" name='weight' value={formData.weight || ''} onChange={handleChange} placeholder='Enter your weight (optional) in kg' className='form-input' />
-                                    </div>
+                                    <label htmlFor="weight">Weight</label>
+                                    <input id='weight' type="number" name='weight' value={formData.weight || ''} onChange={handleChange} placeholder='Enter your weight (optional) in kg' className='form-input' />
                                 </div>
                             </div>
                             <button type='submit' disabled={loading} className='auth-button'>{loading ? 'Registering...' : 'Register'}</button>

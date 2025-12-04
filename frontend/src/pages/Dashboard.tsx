@@ -41,7 +41,7 @@ const Dashboard: React.FC = () => {
         borderRadius: '8px',
         marginBottom: '30px'
       }}>
-        <h2>Welcome, {user?.name}!</h2>
+        <h2>Welcome, {user?.firstName} {user?.lastName}!</h2>
         <p><strong>Email:</strong> {user?.email}</p>
         {user?.age && <p><strong>Age:</strong> {user.age}</p>}
         {user?.height && <p><strong>Height:</strong> {user.height} cm</p>}
