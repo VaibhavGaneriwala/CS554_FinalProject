@@ -39,8 +39,8 @@ const UserSchema = new Schema<IUser>(
         },
         height: {
             type: Number,
-            min: [50, "Height must be at least 50cm"],
-            max: [300, "Height cannot exceed 300cm"],
+            min: [24, "Height must be at least 2 feet"],
+            max: [96, "Height cannot exceed 8 feet"],
         },
         weight: {
             type: Number,

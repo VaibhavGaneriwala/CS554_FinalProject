@@ -7,6 +7,25 @@ import {cacheUtils} from '../config/redis';
 
 const router = express.Router();
 
+// Helper function to clear all workout-related cache keys for a user
+const clearWorkoutCache = async (userId: string): Promise<void> => {
+    try {
+        // Clear all workout cache keys that might contain this user's workouts
+        // Pattern: workouts:* (all workout cache keys)
+        await cacheUtils.delPattern(`workouts:*`);
+        // Also clear the general user workout cache
+        await cacheUtils.del(`workouts:user:${userId}`);
+    } catch (error) {
+        console.error('Error clearing workout cache:', error);
+        // If pattern deletion fails, at least try to clear the main cache key
+        try {
+            await cacheUtils.del(`workouts:user:${userId}`);
+        } catch (e) {
+            // Ignore secondary error
+        }
+    }
+};
+
 const workoutValidation = [
     body('title').trim().isLength({min: 3, max: 100}).withMessage('Title must be between 3 and 100 characters'),
     body('split').trim().isIn(['Push', 'Pull', 'Legs', 'Upper Body', 'Lower Body', 'Full Body', 'Chest', 'Back', 'Shoulders', 'Arms', 'Core', 'Cardio', 'Other']).withMessage('Invalid split type'),
@@ -23,8 +42,13 @@ router.post('/', authenticate, workoutValidation, handleValidationErrors, async 
     try {
         const {title, split, exercises, date, duration, notes} = req.body;
         const userId = req.user?.userId;
+        if (!userId) {
+            res.status(401).json({success: false, message: 'Unauthorized'});
+            return;
+        }
         const workout = await Workout.create({userId, title, split, exercises, date: date || new Date(), duration, notes});
-        await cacheUtils.del(`workouts:user:${userId}`);
+        // Clear all workout-related cache keys for this user
+        await clearWorkoutCache(userId);
         res.status(201).json({success: true, message: 'Workout created successfully', data: workout});
     } catch (error) {
         res.status(500).json({success: false, message: 'Error creating workout', error: error instanceof Error ? error.message : 'Unknown error'});
@@ -51,16 +75,11 @@ router.get('/', authenticate, async (req: Request, res: Response): Promise<void>
             if (startDate) query.date.$gte = new Date(startDate as string);
             if (endDate) query.date.$lte = new Date(endDate as string);
         }
-        const cacheKey = `workouts:${JSON.stringify(query)}:page:${pageNum}`;
-        const cachedData = await cacheUtils.get(cacheKey);
-        if (cachedData){
-            res.status(200).json({success: true, data: cachedData, cached: true});
-            return;
-        }
+        
+        // Fetch directly from database (bypass cache)
         const workouts = await Workout.find(query).sort({date: -1}).skip(skip).limit(limitNum);
         const total = await Workout.countDocuments(query);
         const responseData = {workouts, total, pagination: {currentPage: pageNum, totalPages: Math.ceil(total / limitNum), totalWorkouts: total, hasMore: skip + workouts.length < total}};
-        await cacheUtils.set(cacheKey, responseData, 300);
         res.status(200).json({success: true, data: responseData});
     } catch (error) {
         res.status(500).json({success: false, message: 'Error fetching workouts', error: error instanceof Error ? error.message : 'Unknown error'});
@@ -104,7 +123,10 @@ router.put(
                 return;
             }
             const updatedWorkout = await Workout.findByIdAndUpdate(workoutId, req.body, {new: true, runValidators: true});
-            await cacheUtils.del(`workouts:user:${userId}`);
+            // Clear all workout-related cache keys for this user
+            if (userId) {
+                await clearWorkoutCache(userId);
+            }
             res.status(200).json({success: true, message: 'Workout updated successfully', data: updatedWorkout});
         } catch (error) {
             res.status(500).json({success: false, message: 'Error updating workout', error: error instanceof Error ? error.message : 'Unknown error'});
@@ -130,7 +152,10 @@ router.delete(
                 return;
             }
             await Workout.findByIdAndDelete(workoutId);
-            await cacheUtils.del(`workouts:user:${userId}`);
+            // Clear all workout-related cache keys for this user
+            if (userId) {
+                await clearWorkoutCache(userId);
+            }
             res.status(200).json({success: true, message: 'Workout deleted successfully'});
         } catch (error) {
             res.status(500).json({success: false, message: 'Error deleting workout', error: error instanceof Error ? error.message : 'Unknown error'});

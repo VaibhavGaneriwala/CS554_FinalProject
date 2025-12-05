@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { RegisterData } from '../types';
+import { feetInchesToInches } from '../utils/heightConverter';
 import './Auth.css';
 
 const Register: React.FC = () => {
@@ -14,6 +15,8 @@ const Register: React.FC = () => {
         height: undefined,
         weight: undefined
     });
+    const [heightFeet, setHeightFeet] = useState<string>('');
+    const [heightInches, setHeightInches] = useState<string>('');
     const [confirmPassword, setConfirmPassword] = useState('');
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
@@ -50,8 +53,12 @@ const Register: React.FC = () => {
             if (formData.age !== undefined && formData.age !== null && !isNaN(formData.age) && formData.age > 0) {
                 registrationData.age = formData.age;
             }
-            if (formData.height !== undefined && formData.height !== null && !isNaN(formData.height) && formData.height > 0) {
-                registrationData.height = formData.height;
+            if (heightFeet && heightInches) {
+                const feet = parseFloat(heightFeet);
+                const inches = parseFloat(heightInches);
+                if (!isNaN(feet) && !isNaN(inches) && feet >= 2 && feet <= 8 && inches >= 0 && inches < 12) {
+                    registrationData.height = feetInchesToInches(feet, inches);
+                }
             }
             if (formData.weight !== undefined && formData.weight !== null && !isNaN(formData.weight) && formData.weight > 0) {
                 registrationData.weight = formData.weight;
@@ -116,7 +123,30 @@ const Register: React.FC = () => {
                                 </div>
                                 <div className='form-group'>
                                     <label htmlFor="height">Height</label>
-                                    <input id='height' type="number" name='height' value={formData.height || ''} onChange={handleChange} placeholder='Enter your height (optional) in cm' className='form-input' />
+                                    <div style={{ display: 'flex', gap: '8px' }}>
+                                        <input 
+                                            id='heightFeet' 
+                                            type="number" 
+                                            value={heightFeet} 
+                                            onChange={(e) => setHeightFeet(e.target.value)} 
+                                            placeholder='Feet' 
+                                            min="2"
+                                            max="8"
+                                            className='form-input' 
+                                            style={{ flex: 1 }}
+                                        />
+                                        <input 
+                                            id='heightInches' 
+                                            type="number" 
+                                            value={heightInches} 
+                                            onChange={(e) => setHeightInches(e.target.value)} 
+                                            placeholder='Inches' 
+                                            min="0"
+                                            max="11"
+                                            className='form-input' 
+                                            style={{ flex: 1 }}
+                                        />
+                                    </div>
                                 </div>
                                 <div className='form-group'>
                                     <label htmlFor="weight">Weight</label>

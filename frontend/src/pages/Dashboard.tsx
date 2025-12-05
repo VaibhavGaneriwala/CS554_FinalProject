@@ -1,6 +1,8 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import Navbar from '../components/Navbar';
+import { formatHeight } from '../utils/heightConverter';
 
 const Dashboard: React.FC = () => {
   const { user, logout } = useAuth();
@@ -12,109 +14,54 @@ const Dashboard: React.FC = () => {
   };
 
   return (
-    <div style={{ padding: '20px', maxWidth: '1200px', margin: '0 auto' }}>
-      <div style={{ 
-        display: 'flex', 
-        justifyContent: 'space-between', 
-        alignItems: 'center',
-        marginBottom: '30px'
-      }}>
-        <h1>Dashboard</h1>
-        <button
-          onClick={handleLogout}
-          style={{
-            padding: '10px 20px',
-            backgroundColor: '#d32f2f',
-            color: 'white',
-            border: 'none',
-            borderRadius: '4px',
-            cursor: 'pointer',
-          }}
-        >
-          Logout
-        </button>
-      </div>
-
-      <div style={{ 
-        padding: '20px', 
-        backgroundColor: '#f5f5f5', 
-        borderRadius: '8px',
-        marginBottom: '30px'
-      }}>
-        <h2>Welcome, {user?.firstName} {user?.lastName}!</h2>
-        <p><strong>Email:</strong> {user?.email}</p>
-        {user?.age && <p><strong>Age:</strong> {user.age}</p>}
-        {user?.height && <p><strong>Height:</strong> {user.height} cm</p>}
-        {user?.weight && <p><strong>Weight:</strong> {user.weight} kg</p>}
-      </div>
-
-      <div style={{ 
-        display: 'grid', 
-        gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
-        gap: '20px'
-      }}>
-        <div style={{ 
-          padding: '20px', 
-          backgroundColor: '#e3f2fd', 
-          borderRadius: '8px',
-          textAlign: 'center'
-        }}>
-          <h3>🏋️ Workouts</h3>
-          <p>Track your exercises and routines</p>
+    <>
+      <Navbar isAuthenticated={true} onLogout={handleLogout} />
+      <div className="p-5 max-w-7xl mx-auto">
+        <div className="p-5 bg-gray-100 rounded-lg mb-8">
+          <h2 className="text-2xl font-semibold mb-2">
+            Welcome Back, {user?.firstName ? user.firstName.charAt(0).toUpperCase() + user.firstName.slice(1).toLowerCase() : ''}!
+          </h2>
+          <p className="text-gray-700 mb-2">What would you like to do today?</p>
         </div>
 
-        <div style={{ 
-          padding: '20px', 
-          backgroundColor: '#f3e5f5', 
-          borderRadius: '8px',
-          textAlign: 'center'
-        }}>
-          <h3>🍽️ Meals</h3>
-          <p>Log your nutrition and calories</p>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+          <div className="p-5 bg-blue-50 rounded-lg text-center">
+            <h3 className="text-xl font-semibold mb-2">🏋️ Workouts</h3>
+            <p className="text-gray-600">Track your exercises and routines</p>
+          </div>
+
+          <div className="p-5 bg-purple-50 rounded-lg text-center">
+            <h3 className="text-xl font-semibold mb-2">🍽️ Meals</h3>
+            <p className="text-gray-600">Log your nutrition and calories</p>
+          </div>
+
+          <div className="p-5 bg-green-50 rounded-lg text-center">
+            <h3 className="text-xl font-semibold mb-2">📈 Progress</h3>
+            <p className="text-gray-600">Monitor your fitness journey</p>
+          </div>
+
+          <div className="p-5 bg-orange-50 rounded-lg text-center">
+            <h3 className="text-xl font-semibold mb-2">📱 Social Feed</h3>
+            <p className="text-gray-600">Connect with other users</p>
+          </div>
         </div>
 
-        <div style={{ 
-          padding: '20px', 
-          backgroundColor: '#e8f5e9', 
-          borderRadius: '8px',
-          textAlign: 'center'
-        }}>
-          <h3>📈 Progress</h3>
-          <p>Monitor your fitness journey</p>
-        </div>
-
-        <div style={{ 
-          padding: '20px', 
-          backgroundColor: '#fff3e0', 
-          borderRadius: '8px',
-          textAlign: 'center'
-        }}>
-          <h3>📱 Social Feed</h3>
-          <p>Connect with other users</p>
+        <div className="mt-10 p-5 bg-white border border-gray-300 rounded-lg">
+          <h3 className="text-xl font-semibold mb-3">Getting Started</h3>
+          <p className="mb-3">This is your fitness tracking dashboard. Here you can:</p>
+          <ul className="list-disc list-inside space-y-1 mb-3">
+            <li>Log your workouts and track exercises</li>
+            <li>Record meals and monitor nutrition</li>
+            <li>Track your progress with weight, PRs, and photos</li>
+            <li>Share your fitness journey with others</li>
+            <li>View and interact with other users' posts</li>
+          </ul>
+          <p className="mt-4 italic text-gray-600">
+            More features coming soon...
+          </p>
         </div>
       </div>
-
-      <div style={{ 
-        marginTop: '40px',
-        padding: '20px',
-        backgroundColor: '#fff',
-        border: '1px solid #ddd',
-        borderRadius: '8px'
-      }}>
-        <h3>Getting Started</h3>
-        <p>This is your fitness tracking dashboard. Here you can:</p>
-        <ul>
-          <li>Log your workouts and track exercises</li>
-          <li>Record meals and monitor nutrition</li>
-          <li>Track your progress with weight, PRs, and photos</li>
-          <li>Share your fitness journey with others</li>
-          <li>View and interact with other users' posts</li>
-        </ul>
-        <p style={{ marginTop: '15px', fontStyle: 'italic' }}>
-          More features coming soon...
-        </p>
-      </div>
-    </div>
+    </>
   );
 };
 

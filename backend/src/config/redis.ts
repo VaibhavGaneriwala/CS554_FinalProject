@@ -34,6 +34,25 @@ export const cacheUtils = {
     async del(key: string): Promise<void>{
         await redisClient.del(key);
     },
+    async delPattern(pattern: string): Promise<void>{
+        const stream = redisClient.scanStream({
+            match: pattern,
+            count: 100
+        });
+        const keys: string[] = [];
+        stream.on('data', (resultKeys: string[]) => {
+            keys.push(...resultKeys);
+        });
+        return new Promise((resolve, reject) => {
+            stream.on('end', async () => {
+                if (keys.length > 0) {
+                    await redisClient.del(...keys);
+                }
+                resolve();
+            });
+            stream.on('error', reject);
+        });
+    },
     async flushAll(): Promise<void>{
         await redisClient.flushall();
     },

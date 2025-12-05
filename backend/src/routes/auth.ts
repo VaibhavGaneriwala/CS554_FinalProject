@@ -13,7 +13,7 @@ const registerValidation = [
     body('email').trim().isEmail().normalizeEmail().withMessage('Please provide a valid email address'),
     body('password').trim().isLength({min: 8}).withMessage('Password must be at least 8 characters long'),
     body('age').optional().isInt({min: 16, max: 120}).withMessage('Age must be between 16 and 120'),
-    body('height').optional().isFloat({min: 50, max: 300}).withMessage('Height must be between 50 and 300cm'),
+    body('height').optional().isFloat({min: 24, max: 96}).withMessage('Height must be between 2 and 8 feet'),
     body('weight').optional().isFloat({min: 20, max: 500}).withMessage('Weight must be between 20 and 500kg'),
 ];
 
@@ -39,7 +39,7 @@ router.post('/register', registerValidation, handleValidationErrors, async (req:
         
         const user = await User.create(userData);
         const token = jwtUtils.generateToken({userId: user._id.toString(), email: user.email});
-        res.status(201).json({success: true, message: 'User registered successfully', data: {token, user: {id: user._id.toString(), firstName: user.firstName, lastName: user.lastName, email: user.email, age: user.age, height: user.height, weight: user.weight}}});
+        res.status(201).json({success: true, message: 'User registered successfully', data: {token, user: {id: user._id.toString(), firstName: user.firstName, lastName: user.lastName, email: user.email, age: user.age, height: user.height, weight: user.weight, createdAt: user.createdAt}}});
     } catch (error) {
         res.status(500).json({success: false, message: 'Error registering user', error: error instanceof Error ? error.message: 'Unknown error'});
     }
@@ -59,7 +59,7 @@ router.post('/login', loginValidation, handleValidationErrors, async (req: Reque
             return;
         }
         const token = jwtUtils.generateToken({userId: user._id.toString(), email: user.email});
-        res.status(200).json({success: true, message: 'Login successful', data: {token, user: {id: user._id.toString(), firstName: user.firstName, lastName: user.lastName, email: user.email, age: user.age, height: user.height, weight: user.weight, profilePicture: user.profilePicture}}});
+        res.status(200).json({success: true, message: 'Login successful', data: {token, user: {id: user._id.toString(), firstName: user.firstName, lastName: user.lastName, email: user.email, age: user.age, height: user.height, weight: user.weight, profilePicture: user.profilePicture, createdAt: user.createdAt}}});
     } catch (error) {
         res.status(500).json({success: false, message: 'Error logging in', error: error instanceof Error ? error.message: 'Unknown error'});
     }
@@ -72,7 +72,7 @@ router.get('/me', authenticate, async (req: Request, res: Response): Promise<voi
             res.status(404).json({success: false, message: 'User not found'});
             return;
         }
-        res.status(200).json({success: true, data: {id: user._id.toString(), firstName: user.firstName, lastName: user.lastName, email: user.email, age: user.age, height: user.height, weight: user.weight, profilePicture: user.profilePicture}});
+        res.status(200).json({success: true, data: {id: user._id.toString(), firstName: user.firstName, lastName: user.lastName, email: user.email, age: user.age, height: user.height, weight: user.weight, profilePicture: user.profilePicture, createdAt: user.createdAt}});
     } catch (error) {
         res.status(500).json({success: false, message: 'Error fetching user', error: error instanceof Error ? error.message: 'Unknown error'});
     }
