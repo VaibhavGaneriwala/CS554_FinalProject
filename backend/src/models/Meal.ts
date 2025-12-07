@@ -86,7 +86,7 @@ const MealSchema = new Schema<IMeal>(
     {timestamps: true,}
 );
 
-MealSchema.index({UserId: 1, date: -1});
+MealSchema.index({userId: 1, date: -1});
 MealSchema.index({mealType: 1});
 
 const Meal = mongoose.model<IMeal>('Meal', MealSchema);

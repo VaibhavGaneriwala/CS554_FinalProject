@@ -30,7 +30,10 @@ const Dashboard: React.FC = () => {
             <p className="text-gray-600">Track your exercises and routines</p>
           </div>
 
-          <div className="p-5 bg-purple-50 rounded-lg text-center">
+          <div
+            className="p-5 bg-purple-50 rounded-lg text-center cursor-pointer hover:bg-purple-100 transition"
+            onClick={() => navigate("/meals")}
+          >
             <h3 className="text-xl font-semibold mb-2">🍽️ Meals</h3>
             <p className="text-gray-600">Log your nutrition and calories</p>
           </div>
