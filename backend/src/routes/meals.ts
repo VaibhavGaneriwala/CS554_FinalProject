@@ -25,10 +25,10 @@ const upload = multer({
 const mealValidation = [
     body('name').trim().isLength({min: 3, max: 100}).notEmpty().withMessage('Name is required'),
     body('mealType').isIn(['breakfast', 'lunch', 'dinner', 'snack']).withMessage('Invalid meal type'),
-    body('nutrition.calories').isFloat({min: 0, max: 10000}).withMessage('Calories must be between 0 and 10000'),
-    body('nutrition.protein').isFloat({min: 0, max: 1000}).withMessage('Protein must be between 0 and 1000g'),
-    body('nutrition.carbs').isFloat({min: 0, max: 1000}).withMessage('Carbs must be between 0 and 1000g'),
-    body('nutrition.fat').isFloat({min: 0, max: 1000}).withMessage('Fat must be between 0 and 1000g'),
+    body('nutrition.calories').isFloat({min: 0, max: 5000}).withMessage('Calories must be between 0 and 5000'),
+    body('nutrition.protein').isFloat({min: 0, max: 100}).withMessage('Protein must be between 0 and 100g'),
+    body('nutrition.carbs').isFloat({min: 0, max: 100}).withMessage('Carbs must be between 0 and 100g'),
+    body('nutrition.fat').isFloat({min: 0, max: 100}).withMessage('Fat must be between 0 and 100g'),
     body('date').optional().isISO8601().withMessage('Invalid date format'),
 ];
 

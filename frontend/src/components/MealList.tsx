@@ -11,8 +11,8 @@ const MealList: React.FC = () => {
     const [error, setError] = useState<string | null>(null);
 
     const loadMeals = async () => {
-        const data = await mealService.getMeals();
-        setMeals(data.meals);
+        const res = await mealService.getMeals();
+        setMeals(res.data?.meals || []);
     };
 
     useEffect(() => {
