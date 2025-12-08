@@ -19,6 +19,10 @@ const MealList: React.FC = () => {
         loadMeals();
     }, [mealType, startDate, endDate]);
 
+    const filteredMeals = meals.filter(meal =>
+        mealType ? meal.mealType === mealType : true
+    );
+
     return (
         <div>
             <div className="mb-4 flex space-x-4">
@@ -35,6 +39,7 @@ const MealList: React.FC = () => {
                     <option value="dinner">Dinner</option>
                     <option value="snack">Snack</option>
                 </select>
+                {/* Date Filters, maybe i'll fix later
                 <input
                     type="date"
                     value={startDate}
@@ -47,9 +52,10 @@ const MealList: React.FC = () => {
                     onChange={(e) => setEndDate(e.target.value)}
                     className="border border-gray-300 rounded px-3 py-2"
                 />
+                */}
             </div>
             <div>
-                {meals.map((meal) => (
+                {filteredMeals.map((meal) => (
                     <div key={meal._id} className="border p-3 rounded bg-gray-50">
                         <h3 className="font-semibold text-lg">{meal.name}</h3>
                         <p className="text-sm text-gray-600 capitalize">{meal.mealType}</p>

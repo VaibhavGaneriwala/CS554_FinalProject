@@ -47,6 +47,7 @@ const MealForm: React.FC<MealFormProps> = ({ onMealCreated }) => {
 
 
             await mealService.createMeal(data);
+            console.log("Submitting:", data);
 
             setName("");
             setMealType("breakfast");
