@@ -74,6 +74,12 @@ const Navbar = ({ isAuthenticated, userName, onLogout }: NavbarProps) => {
                   Profile
                 </Link>
 
+                {userName && (
+                  <div className="flex items-center space-x-2 text-gray-100 text-sm">
+                    <span className="font-medium">Hi, {userName}</span>
+                  </div>
+                )}
+
                 {/* User Menu */}
                 <div className="flex items-center space-x-4">
                   <button
@@ -131,6 +137,11 @@ const Navbar = ({ isAuthenticated, userName, onLogout }: NavbarProps) => {
           <div className="px-2 pt-2 pb-3 space-y-1">
             {isAuthenticated ? (
               <>
+              {userName && (
+                  <div className="px-3 py-2 text-gray-200 text-sm font-medium">
+                    Logged in as {userName}
+                  </div>
+                )}
                 <Link
                   to="/dashboard"
                   className="block px-3 py-2 rounded-md text-base font-medium text-gray-200 hover:text-white hover:bg-gray-800"
