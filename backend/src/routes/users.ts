@@ -4,8 +4,23 @@ import {User} from '../models/index';
 import {authenticate} from '../middleware/auth';
 import {handleValidationErrors, isValidObjectId} from '../utils/validation';
 import { cacheUtils } from '../config/redis';
+import { minioUtils } from '../config/minio';
+import multer from 'multer';
 
 const router = express.Router();
+
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
+  fileFilter: (_req, file, cb) => {
+    const allowedMimes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+    if (allowedMimes.includes(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(new Error('Only JPEG, JPG, PNG, and WEBP images are allowed'));
+    }
+  },
+});
 
 router.get('/', async (req: Request, res: Response): Promise<void> => {
     try {
@@ -88,5 +103,67 @@ router.put(
         }
     }
 );
+
+router.post(
+  '/profile-picture',
+  authenticate,
+  upload.single('profilePicture'),
+  async (req: Request, res: Response): Promise<void> => {
+    try {
+      const userId = req.user?.userId;
+
+      if (!userId) {
+        res.status(401).json({ success: false, message: 'Authentication required' });
+        return;
+      }
+
+      const file = req.file;
+      if (!file) {
+        res.status(400).json({ success: false, message: 'No file uploaded' });
+        return;
+      }
+
+      const fileName = minioUtils.generatefileName(file.originalname, userId);
+      await minioUtils.uploadFile(fileName, file.buffer, file.mimetype);
+      const fileUrl = await minioUtils.getFileUrl(fileName);
+
+      const user = await User.findByIdAndUpdate(
+        userId,
+        { profilePicture: fileUrl },
+        { new: true, runValidators: true }
+      );
+
+      if (!user) {
+        res.status(404).json({ success: false, message: 'User not found' });
+        return;
+      }
+
+      await cacheUtils.del(`user:${userId}`);
+
+      res.status(200).json({
+        success: true,
+        message: 'Profile picture updated successfully',
+        data: {
+          id: user._id.toString(),
+          firstName: user.firstName,
+          lastName: user.lastName,
+          email: user.email,
+          age: user.age,
+          height: user.height,
+          weight: user.weight,
+          profilePicture: user.profilePicture,
+          createdAt: user.createdAt,
+        },
+      });
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        message: 'Error updating profile picture',
+        error: error instanceof Error ? error.message : 'Unknown error',
+      });
+    }
+  }
+);
+
 
 export default router;
