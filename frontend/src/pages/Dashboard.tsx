@@ -1,10 +1,11 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import Navbar from '../components/Navbar';
 import { formatHeight } from '../utils/heightConverter';
 import { Post, Pagination } from '../types';
 import { postService } from '../services/postService';
+import PostCard from '../components/Post';
 
 const formatPostDate = (dateString: string): string => {
   const date = new Date(dateString);
@@ -32,6 +33,31 @@ const Dashboard: React.FC = () => {
   const [feedError, setFeedError] = useState<string | null>(null);
   const [filterType, setFilterType] = useState<string>('all');
   const [page, setPage] = useState<number>(1);
+  const [newPostType, setNewPostType] = useState<'workout' | 'meal' | 'progress'>('workout');
+  const [newPostContent, setNewPostContent] = useState('');
+  const [composerLoading, setComposerLoading] = useState(false);
+  const [composerError, setComposerError] = useState<string | null>(null);
+  const [likingPostId, setLikingPostId] = useState<string | null>(null);
+
+  const loadPosts = useCallback(async () => {
+    if (!user) return;
+    setFeedLoading(true);
+    setFeedError(null);
+    try {
+      const typeParam = filterType === 'all' ? undefined : filterType;
+      const res = await postService.getPosts(undefined, typeParam, page, 10);
+      if (res.success && res.data) {
+        setPosts(res.data.posts);
+        setPagination(res.data.pagination);
+      } else {
+        setFeedError(res.message || 'Failed to load feed');
+      }
+    } catch (err: any) {
+      setFeedError(err.message || 'Failed to load feed');
+    } finally {
+      setFeedLoading(false);
+    }
+  }, [user, filterType, page]);
 
   useEffect(() => {
     const loadPosts = async () => {
@@ -67,10 +93,80 @@ const Dashboard: React.FC = () => {
     navigate('/login');
   };
 
-  const displayName =
-    user?.firstName
-      ? user.firstName.charAt(0).toUpperCase() + user.firstName.slice(1).toLowerCase()
-      : '';
+  const handleCreatePost = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (!user) return;
+
+    const trimmed = newPostContent.trim();
+    if (!trimmed) {
+      setComposerError('Please enter some content for your post.');
+      return;
+    }
+
+    setComposerError(null);
+    setComposerLoading(true);
+
+    try {
+      const res = await postService.createPost({
+        type: newPostType,
+        content: trimmed
+      });
+
+      if (!res.success) {
+        setComposerError(res.message || 'Failed to create post.');
+        return;
+      }
+
+      setNewPostContent('');
+      setNewPostType('workout');
+
+      await loadPosts();
+    } catch (err: any) {
+      setComposerError(err.message || 'Failed to create post.');
+    } finally {
+      setComposerLoading(false);
+    }
+  };
+
+  const handleToggleLike = async (postId: string) => {
+    if (!user) return;
+
+    setLikingPostId(postId);
+    setFeedError(null);
+
+    try {
+      const res = await postService.likePost(postId);
+
+      if (!res.success) {
+        setFeedError(res.message || 'Failed to update like.');
+        return;
+      }
+
+      await loadPosts();
+    } catch (err: any) {
+      setFeedError(err.message || 'Failed to update like.');
+    } finally {
+      setLikingPostId(null);
+    }
+  };
+
+  const handleAddComment = async (postId: string, text: string) => {
+    if (!user) return;
+
+    setFeedError(null);
+    try {
+      const res = await postService.addComment(postId, text);
+
+      if (!res.success) {
+        setFeedError(res.message || 'Failed to add comment.');
+        return;
+      }
+
+      await loadPosts();
+    } catch (err: any) {
+      setFeedError(err.message || 'Failed to add comment.');
+    }
+  };
 
   return (
     <>
@@ -135,6 +231,70 @@ const Dashboard: React.FC = () => {
             <h3 className="text-xl font-semibold mb-2">Social Feed</h3>
             <p className="text-gray-600">View all recent activity</p>
           </button>
+        </div>
+
+        <div className="mt-10 p-5 bg-white border border-gray-300 rounded-lg">
+          <h3 className="text-xl font-semibold mb-3">Create a New Post</h3>
+
+          <form onSubmit={handleCreatePost} className="space-y-3">
+            <div className="flex flex-wrap gap-2 text-sm">
+              <button
+                type="button"
+                onClick={() => setNewPostType('workout')}
+                className={`px-3 py-1 rounded-full border ${
+                  newPostType === 'workout'
+                    ? 'bg-blue-600 text-white border-blue-600'
+                    : 'bg-white text-gray-700 border-gray-300 hover:bg-blue-50'
+                }`}
+              >
+                Workout
+              </button>
+              <button
+                type="button"
+                onClick={() => setNewPostType('meal')}
+                className={`px-3 py-1 rounded-full border ${
+                  newPostType === 'meal'
+                    ? 'bg-purple-600 text-white border-purple-600'
+                    : 'bg-white text-gray-700 border-gray-300 hover:bg-purple-50'
+                }`}
+              >
+                Meal
+              </button>
+              <button
+                type="button"
+                onClick={() => setNewPostType('progress')}
+                className={`px-3 py-1 rounded-full border ${
+                  newPostType === 'progress'
+                    ? 'bg-green-600 text-white border-green-600'
+                    : 'bg-white text-gray-700 border-gray-300 hover:bg-green-50'
+                }`}
+              >
+                Progress
+              </button>
+            </div>
+
+            <textarea
+              value={newPostContent}
+              onChange={(e) => setNewPostContent(e.target.value)}
+              rows={3}
+              placeholder="Share your workout, meal, or progress update..."
+              className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+
+            {composerError && (
+              <p className="text-sm text-red-600">{composerError}</p>
+            )}
+
+            <div className="flex justify-end">
+              <button
+                type="submit"
+                disabled={composerLoading}
+                className="px-4 py-2 rounded-md bg-blue-600 text-white text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed hover:bg-blue-700"
+              >
+                {composerLoading ? 'Posting...' : 'Post'}
+              </button>
+            </div>
+          </form>
         </div>
 
         <div className="mt-10 p-5 bg-white border border-gray-300 rounded-lg">
@@ -209,37 +369,15 @@ const Dashboard: React.FC = () => {
           {!feedLoading && !feedError && posts.length > 0 && (
             <div className="space-y-4">
               {posts.map((post) => (
-                <div
+                <PostCard
                   key={post._id}
-                  className="border border-gray-200 rounded-lg p-4 hover:shadow-sm transition-shadow"
-                >
-                  <div className="flex justify-between items-start mb-2">
-                    <div>
-                      <p className="text-sm font-semibold text-gray-800">
-                        User {post.userId}
-                      </p>
-                      <p className="text-xs text-gray-500">
-                        {formatPostDate(post.createdAt)}
-                      </p>
-                    </div>
-                    <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-700 capitalize">
-                      {post.type}
-                    </span>
-                  </div>
-
-                  <div className="mt-2">
-                    <p className="text-sm text-gray-800">
-                      {post.content}
-                    </p>
-                  </div>
-
-                  <div className="mt-3 flex items-center justify-between text-xs text-gray-600">
-                    <div className="flex items-center gap-3">
-                      <span>{post.likes.length} likes</span>
-                      <span>{post.comments.length} comments</span>
-                    </div>
-                  </div>
-                </div>
+                  post={post}
+                  formatPostDate={formatPostDate}
+                  currentUserId={user?.id}
+                  onToggleLike={handleToggleLike}
+                  onAddComment={handleAddComment}
+                  liking={likingPostId === post._id}
+                />
               ))}
             </div>
           )}
