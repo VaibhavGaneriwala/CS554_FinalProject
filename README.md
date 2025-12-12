@@ -72,6 +72,47 @@ REACT_APP_API_URL=http://localhost:3002/api
 
 **Note**: If you change `BACKEND_PORT` or `FRONTEND_PORT`, make sure to also update `CORS_ORIGIN` and `REACT_APP_API_URL` accordingly.
 
+### Backend `.env` (when running backend outside Docker)
+
+Separately from Docker Compose port overrides, you may have a `backend/.env` for the backend runtime config when you run the backend locally (e.g., `npm run dev` inside `backend/`).
+
+Your current `backend/.env` includes keys like `PORT`, `REDIS_HOST`, `MINIO_*`, and `CORS_ORIGIN`. Do **not** commit secrets (JWT/third‑party API keys). Here’s a safe template matching your file:
+
+```env
+# Server Configuration
+PORT=5000
+NODE_ENV=development
+
+# MongoDB Configuration
+# (In this repo the backend expects MONGODB_URI in Docker; use whichever your code is wired to.)
+MONGODB_URI=mongodb://localhost:27017/cs554-finalproject
+
+# Redis Configuration
+REDIS_HOST=localhost
+REDIS_PORT=6379
+
+# JWT Configuration
+JWT_SECRET=<your_jwt_secret>
+JWT_EXPIRES_IN=7d
+
+# MinIO Configuration
+MINIO_ENDPOINT=localhost
+MINIO_PORT=9000
+MINIO_ACCESS_KEY=minioadmin
+MINIO_SECRET_KEY=minioadmin
+MINIO_USE_SSL=false
+MINIO_BUCKET_NAME=cs554-finalproject
+
+# External API Keys
+EDAMAM_APP_ID=<your_edamam_app_id>
+EDAMAM_APP_KEY=<your_edamam_app_key>
+
+# CORS
+CORS_ORIGIN=http://localhost:3001
+```
+
+If you change the backend `PORT`, make sure your frontend `REACT_APP_API_URL` points to the same port.
+
 ---
 
 ## Seed data (important)
@@ -143,14 +184,3 @@ npm start
 Make sure `REACT_APP_API_URL` points at the backend (example: `http://localhost:3000/api`).
 
 ---
-
-## Troubleshooting
-
-### “I get logged out after restart / refresh”
-
-If you’re using Docker Compose and the backend container restarts, the seed script may run again and wipe users. Disable reseeding (see the “Seed data” section).
-
-### Profile picture/meal photo doesn’t display
-
-Images are served through the backend (`/api/files/...`). If the backend isn’t running or ports don’t match your `REACT_APP_API_URL`, images won’t load.
-
