@@ -14,7 +14,7 @@ export const mealService = {
                 formData.append('photos', photo);
             });
         }
-        const response = await api.post<ApiResponse<Meal>>('/meals', formData, { headers: { 'Content-Type': 'multipart/form-data', }, });
+        const response = await api.post<ApiResponse<Meal>>('/meals', formData);
         return response.data;
     },
     getMeals: async (userId?: string, mealType?: string, startDate?: string, endDate?: string, page = 1, limit = 20) => {

@@ -16,7 +16,7 @@ export const progressService = {
                 formData.append('photos', photo);
             });
         }
-        const response = await api.post<ApiResponse<Progress>>('/progress', formData, {headers: {'Content-Type': 'multipart/form-data',},});
+        const response = await api.post<ApiResponse<Progress>>('/progress', formData);
         return response.data;
     },
     getProgress: async (userId?: string, type?: string, startDate?: string, endDate?: string, page = 1, limit = 20) => {

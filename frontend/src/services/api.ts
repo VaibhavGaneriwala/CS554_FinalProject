@@ -3,15 +3,23 @@ const API_URL = process.env.REACT_APP_API_URL || '/api';
 
 const api: AxiosInstance = axios.create({
     baseURL: API_URL,
-    headers: {
-        'Content-Type': 'application/json',
-    },
 });
 
 api.interceptors.request.use(
     (config) => {
         const token = localStorage.getItem('token');
         if (token) config.headers.Authorization = `Bearer ${token}`;
+        const isFormData =
+          typeof FormData !== 'undefined' && config.data instanceof FormData;
+
+        if (isFormData) {
+          delete (config.headers as any)['Content-Type'];
+          delete (config.headers as any)['content-type'];
+        } else {
+          if (!(config.headers as any)['Content-Type'] && !(config.headers as any)['content-type']) {
+            (config.headers as any)['Content-Type'] = 'application/json';
+          }
+        }
         return config;
     },
     (error) => {
