@@ -9,15 +9,15 @@ const Login: React.FC = () => {
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
-    const errorRef = useRef<string>('');
+    // const errorRef = useRef<string>('');
     const formRef = useRef<HTMLFormElement>(null);
     const { login } = useAuth();
     const navigate = useNavigate();
 
     // Keep error ref in sync with error state
-    useEffect(() => {
-        errorRef.current = error;
-    }, [error]);
+    // useEffect(() => {
+    //     errorRef.current = error;
+    // }, [error]);
 
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
@@ -29,7 +29,7 @@ const Login: React.FC = () => {
         
         // Clear previous error
         setError('');
-        errorRef.current = '';
+        //errorRef.current = '';
         setLoading(true);
         
         try {
@@ -50,14 +50,14 @@ const Login: React.FC = () => {
             
             // Set error in both state and ref
             setError(errorMessage);
-            errorRef.current = errorMessage;
+            //errorRef.current = errorMessage;
             
             // Force a small delay to ensure state update
-            setTimeout(() => {
-                if (errorRef.current) {
-                    setError(errorRef.current);
-                }
-            }, 0);
+            // setTimeout(() => {
+            //     if (errorRef.current) {
+            //         setError(errorRef.current);
+            //     }
+            // }, 0);
         } finally {
             setLoading(false);
         }

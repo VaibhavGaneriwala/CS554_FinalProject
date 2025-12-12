@@ -32,7 +32,9 @@ const Profile: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [errors, setErrors] = useState<string[]>([]);
   const [success, setSuccess] = useState<string | null>(null);
-
+  const [uploading, setUploading] = useState(false);
+  const [pictureFile, setPictureFile] = useState<File | null>(null);
+  
   const [formData, setFormData] = useState({
     firstName: user?.firstName || '',
     lastName: user?.lastName || '',
@@ -144,7 +146,55 @@ const Profile: React.FC = () => {
     setError(null);
     setErrors([]);
     setSuccess(null);
+    setPictureFile(null);
   };
+
+  const handleProfilePictureChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const file = e.target.files?.[0] || null;
+  setPictureFile(file);
+};
+
+const handleUploadProfilePicture = async () => {
+  setError(null);
+  setErrors([]);
+  setSuccess(null);
+
+  if (!pictureFile) {
+    setError('Please select a profile picture to upload');
+    return;
+  }
+
+  try {
+    setUploading(true);
+    const response = await userService.uploadProfilePicture(pictureFile);
+    if (response.success && response.data) {
+      updateUser(response.data);
+      setSuccess('Profile picture updated successfully!');
+      setPictureFile(null);
+    } else {
+      setError(response.message || 'Failed to update profile picture');
+    }
+  } catch (err: any) {
+    if (err.response?.data) {
+      const errorData = err.response.data;
+      if (errorData.errors && Array.isArray(errorData.errors)) {
+        const formattedErrors = errorData.errors.map((err: string) => {
+          const colonIndex = err.indexOf(':');
+          return colonIndex > 0 ? err.substring(colonIndex + 1).trim() : err;
+        });
+        setErrors(formattedErrors);
+      } else if (errorData.message) {
+        setError(errorData.message);
+      } else {
+        setError('An error occurred while updating your profile picture');
+      }
+    } else {
+      setError(err.message || 'An error occurred while updating your profile picture');
+    }
+  } finally {
+    setUploading(false);
+  }
+};
 
   if (!user) {
     return (
@@ -161,7 +211,7 @@ const Profile: React.FC = () => {
 
   return (
     <>
-      <Navbar isAuthenticated={true} onLogout={handleLogout} />
+      <Navbar isAuthenticated={true} userName={user?.firstName} onLogout={handleLogout} />
       <div className="p-5 max-w-4xl mx-auto">
       <div className="mb-8">
         <h1 className="text-3xl font-bold mb-2">Profile</h1>
@@ -348,6 +398,28 @@ const Profile: React.FC = () => {
               </div>
             </div>
 
+            <div className="mt-4">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Profile Picture
+              </label>
+              <div className="flex items-center gap-3">
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleProfilePictureChange}
+                  className="text-sm"
+                />
+                <button
+                  type="button"
+                  onClick={handleUploadProfilePicture}
+                  disabled={uploading}
+                  className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {uploading ? 'Uploading...' : 'Upload'}
+                </button>
+              </div>
+            </div>
+
             <div className="flex gap-3 pt-4">
               <button
                 type="submit"
@@ -359,7 +431,7 @@ const Profile: React.FC = () => {
               <button
                 type="button"
                 onClick={handleCancel}
-                disabled={loading}
+                disabled={loading || uploading}
                 className="px-6 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Cancel
