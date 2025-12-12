@@ -7,21 +7,16 @@ import {cacheUtils} from '../config/redis';
 
 const router = express.Router();
 
-// Helper function to clear all workout-related cache keys for a user
 const clearWorkoutCache = async (userId: string): Promise<void> => {
     try {
-        // Clear all workout cache keys that might contain this user's workouts
-        // Pattern: workouts:* (all workout cache keys)
         await cacheUtils.delPattern(`workouts:*`);
-        // Also clear the general user workout cache
         await cacheUtils.del(`workouts:user:${userId}`);
     } catch (error) {
         console.error('Error clearing workout cache:', error);
-        // If pattern deletion fails, at least try to clear the main cache key
         try {
             await cacheUtils.del(`workouts:user:${userId}`);
         } catch (e) {
-            // Ignore secondary error
+            console.error('Error clearing workout cache:', e);
         }
     }
 };
@@ -47,7 +42,6 @@ router.post('/', authenticate, workoutValidation, handleValidationErrors, async 
             return;
         }
         const workout = await Workout.create({userId, title, split, exercises, date: date || new Date(), duration, notes});
-        // Clear all workout-related cache keys for this user
         await clearWorkoutCache(userId);
         res.status(201).json({success: true, message: 'Workout created successfully', data: workout});
     } catch (error) {
@@ -76,7 +70,6 @@ router.get('/', authenticate, async (req: Request, res: Response): Promise<void>
             if (endDate) query.date.$lte = new Date(endDate as string);
         }
         
-        // Fetch directly from database (bypass cache)
         const workouts = await Workout.find(query).sort({date: -1}).skip(skip).limit(limitNum);
         const total = await Workout.countDocuments(query);
         const responseData = {workouts, total, pagination: {currentPage: pageNum, totalPages: Math.ceil(total / limitNum), totalWorkouts: total, hasMore: skip + workouts.length < total}};
@@ -123,7 +116,6 @@ router.put(
                 return;
             }
             const updatedWorkout = await Workout.findByIdAndUpdate(workoutId, req.body, {new: true, runValidators: true});
-            // Clear all workout-related cache keys for this user
             if (userId) {
                 await clearWorkoutCache(userId);
             }
@@ -152,7 +144,6 @@ router.delete(
                 return;
             }
             await Workout.findByIdAndDelete(workoutId);
-            // Clear all workout-related cache keys for this user
             if (userId) {
                 await clearWorkoutCache(userId);
             }

@@ -11,7 +11,7 @@ const registerValidation = [
     body('firstName').trim().isLength({min: 2, max: 50}).withMessage('First name must be between 2 and 50 characters'),
     body('lastName').trim().isLength({min: 2, max: 50}).withMessage('Last name must be between 2 and 50 characters'),
     body('email').trim().isEmail().normalizeEmail().withMessage('Please provide a valid email address'),
-    body('password').trim().isLength({min: 8}).withMessage('Password must be at least 8 characters long'),
+    body('password').trim().isLength({min: 16}).withMessage('Password must be at least 16 characters long').matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{16,}$/).withMessage('Password must include uppercase, lowercase, number, and symbol'),
     body('age').optional().isInt({min: 16, max: 120}).withMessage('Age must be between 16 and 120'),
     body('height').optional().isFloat({min: 24, max: 96}).withMessage('Height must be between 2 and 8 feet'),
     body('weight').optional().isFloat({min: 20, max: 500}).withMessage('Weight must be between 20 and 500kg'),
@@ -19,7 +19,7 @@ const registerValidation = [
 
 const loginValidation = [
     body('email').trim().isEmail().normalizeEmail().withMessage('Please provide a valid email address'),
-    body('password').trim().isLength({min: 8}).withMessage('Password must be at least 8 characters long'),
+    body('password').trim().isLength({min: 16}).withMessage('Password must be at least 16 characters long').matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{16,}$/).withMessage('Password must include uppercase, lowercase, number, and symbol'),
 ];
 
 router.post('/register', registerValidation, handleValidationErrors, async (req: Request, res: Response): Promise<void> => {

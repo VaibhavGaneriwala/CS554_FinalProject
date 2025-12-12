@@ -11,7 +11,7 @@ const router = express.Router();
 
 const upload = multer({
   storage: multer.memoryStorage(),
-  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
+  limits: { fileSize: 5 * 1024 * 1024 },
   fileFilter: (_req, file, cb) => {
     const allowedMimes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
     if (allowedMimes.includes(file.mimetype)) {
@@ -125,7 +125,7 @@ router.post(
 
       const fileName = minioUtils.generatefileName(file.originalname, userId);
       await minioUtils.uploadFile(fileName, file.buffer, file.mimetype);
-      const fileUrl = await minioUtils.getFileUrl(fileName);
+      const fileUrl = `${req.protocol}://${req.get('host')}/api/files/${encodeURIComponent(fileName)}`;
 
       const user = await User.findByIdAndUpdate(
         userId,

@@ -41,7 +41,7 @@ router.post('/', authenticate, upload.array('photos', 5), progressValidation, ha
             for (const file of files){
                 const fileName = minioUtils.generatefileName(file.originalname, userId!);
                 await minioUtils.uploadFile(fileName, file.buffer, file.mimetype);
-                const fileUrl = await minioUtils.getFileUrl(fileName);
+                const fileUrl = `${req.protocol}://${req.get('host')}/api/files/${encodeURIComponent(fileName)}`;
                 photoUrls.push(fileUrl);
             }
         }

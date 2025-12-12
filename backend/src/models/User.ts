@@ -29,7 +29,14 @@ const UserSchema = new Schema<IUser>(
         password: {
             type: String,
             required: [true, "Password is required"],
-            minlength: [8, "Password must be at least 8 characters long"],
+            minlength: [16, "Password must be at least 16 characters long"],
+            validate: {
+                validator: function (value: string) {
+                    if (typeof value === 'string' && /^\$2[aby]\$/.test(value)) return true;
+                    return /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{16,}$/.test(value);
+                },
+                message: "Password must be at least 16 characters long and include uppercase, lowercase, number, and symbol",
+            },
             select: false,
         },
         age: {

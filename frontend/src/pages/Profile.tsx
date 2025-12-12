@@ -18,7 +18,7 @@ const formatDate = (dateString: string): string => {
   const minutes = date.getMinutes();
   const ampm = hours >= 12 ? 'PM' : 'AM';
   hours = hours % 12;
-  hours = hours ? hours : 12; // the hour '0' should be '12'
+  hours = hours ? hours : 12;
   const minutesStr = minutes < 10 ? `0${minutes}` : minutes;
   
   return `${month} ${day}, ${year} (${hours}:${minutesStr} ${ampm})`;
@@ -34,6 +34,9 @@ const Profile: React.FC = () => {
   const [success, setSuccess] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const [pictureFile, setPictureFile] = useState<File | null>(null);
+  const [picturePreviewUrl, setPicturePreviewUrl] = useState<string | null>(null);
+  const [profilePicNonce, setProfilePicNonce] = useState<number>(() => Date.now());
+  const [avatarLoadError, setAvatarLoadError] = useState(false);
   
   const [formData, setFormData] = useState({
     firstName: user?.firstName || '',
@@ -45,7 +48,6 @@ const Profile: React.FC = () => {
     weight: user?.weight || '',
   });
 
-  // Initialize height fields from user data
   useEffect(() => {
     if (user?.height) {
       const { feet, inches } = inchesToFeetInches(user.height);
@@ -56,6 +58,40 @@ const Profile: React.FC = () => {
       }));
     }
   }, [user]);
+
+  useEffect(() => {
+    if (!pictureFile) {
+      setPicturePreviewUrl(null);
+      return;
+    }
+
+    const objectUrl = URL.createObjectURL(pictureFile);
+    setPicturePreviewUrl(objectUrl);
+    return () => URL.revokeObjectURL(objectUrl);
+  }, [pictureFile]);
+
+  useEffect(() => {
+    if (user?.profilePicture) {
+      setProfilePicNonce(Date.now());
+      setAvatarLoadError(false);
+    }
+  }, [user?.profilePicture]);
+
+  const getAvatarSrc = (): string | null => {
+    if (picturePreviewUrl) return picturePreviewUrl;
+    if (!user?.profilePicture) return null;
+    const sep = user.profilePicture.includes('?') ? '&' : '?';
+    return `${user.profilePicture}${sep}v=${profilePicNonce}`;
+  };
+
+  const getInitials = (): string => {
+    const first = (user?.firstName || '').trim();
+    const last = (user?.lastName || '').trim();
+    const fi = first ? first[0].toUpperCase() : '';
+    const li = last ? last[0].toUpperCase() : '';
+    const initials = `${fi}${li}`.trim();
+    return initials || 'U';
+  };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -95,12 +131,9 @@ const Profile: React.FC = () => {
         setError(response.message || 'Failed to update profile');
       }
     } catch (err: any) {
-      // Extract error message from axios error response
       if (err.response?.data) {
         const errorData = err.response.data;
-        // Check if there are validation errors in the response
         if (errorData.errors && Array.isArray(errorData.errors)) {
-          // Remove the field name prefix (e.g., "age: " from "age: Age must be...")
           const formattedErrors = errorData.errors.map((err: string) => {
             const colonIndex = err.indexOf(':');
             return colonIndex > 0 ? err.substring(colonIndex + 1).trim() : err;
@@ -177,6 +210,10 @@ const handleUploadProfilePicture = async () => {
   } catch (err: any) {
     if (err.response?.data) {
       const errorData = err.response.data;
+      if (err.response?.status === 404 && errorData?.message === 'User not found') {
+        setError('Your session is out of sync with the server (user not found). Please log out and log back in.');
+        return;
+      }
       if (errorData.errors && Array.isArray(errorData.errors)) {
         const formattedErrors = errorData.errors.map((err: string) => {
           const colonIndex = err.indexOf(':');
@@ -211,7 +248,7 @@ const handleUploadProfilePicture = async () => {
 
   return (
     <>
-      <Navbar isAuthenticated={true} userName={user?.firstName} onLogout={handleLogout} />
+      <Navbar isAuthenticated={true} onLogout={handleLogout} />
       <div className="p-5 max-w-4xl mx-auto">
       <div className="mb-8">
         <h1 className="text-3xl font-bold mb-2">Profile</h1>
@@ -269,6 +306,30 @@ const handleUploadProfilePicture = async () => {
       )}
 
       <div className="bg-white border border-gray-300 rounded-lg p-6 shadow-sm">
+        <div className="flex items-center gap-4 mb-6">
+          {getAvatarSrc() && !avatarLoadError ? (
+            <img
+              src={getAvatarSrc() as string}
+              alt="Profile"
+              className="w-20 h-20 rounded-full object-cover border-2 border-gray-300"
+              onError={() => setAvatarLoadError(true)}
+            />
+          ) : (
+            <div className="w-20 h-20 rounded-full bg-gray-200 border-2 border-gray-300 flex items-center justify-center text-gray-700 font-semibold text-xl">
+              {getInitials()}
+            </div>
+          )}
+          <div className="min-w-0">
+            <p className="text-lg font-semibold text-gray-900 truncate">
+              {user.firstName} {user.lastName}
+            </p>
+            <p className="text-sm text-gray-600 truncate">{user.email}</p>
+            {isEditing && picturePreviewUrl && (
+              <p className="text-xs text-gray-500 mt-1">Previewing new profile picture (not saved yet)</p>
+            )}
+          </div>
+        </div>
+
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-2xl font-semibold">Personal Information</h2>
           {!isEditing && (
@@ -460,24 +521,6 @@ const handleUploadProfilePicture = async () => {
               <p className="text-sm font-medium text-gray-500 mb-1">Email</p>
               <p className="text-lg text-gray-900">{user.email || 'Not set'}</p>
             </div>
-
-            {user.profilePicture && (
-              <div>
-                <p className="text-sm font-medium text-gray-500 mb-1">Profile Picture</p>
-                <img 
-                  src={user.profilePicture} 
-                  alt="Profile" 
-                  className="w-32 h-32 rounded-full object-cover border-2 border-gray-300"
-                />
-              </div>
-            )}
-
-            {!user.profilePicture && (
-              <div>
-                <p className="text-sm font-medium text-gray-500 mb-1">Profile Picture</p>
-                <p className="text-lg text-gray-900">Not set</p>
-              </div>
-            )}
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>

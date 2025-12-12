@@ -3,11 +3,10 @@ import { useState } from 'react';
 
 interface NavbarProps {
   isAuthenticated: boolean;
-  userName?: string;
   onLogout: () => void;
 }
 
-const Navbar = ({ isAuthenticated, userName, onLogout }: NavbarProps) => {
+const Navbar = ({ isAuthenticated, onLogout }: NavbarProps) => {
   const navigate = useNavigate();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
@@ -33,79 +32,74 @@ const Navbar = ({ isAuthenticated, userName, onLogout }: NavbarProps) => {
             </Link>
           </div>
 
-          {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center space-x-8">
-            {isAuthenticated ? (
-              <>
-                <Link
-                  to="/dashboard"
-                  className="text-gray-200 hover:text-white transition-colors font-medium"
-                >
-                  Dashboard
-                </Link>
-                <Link
-                  to="/workouts"
-                  className="text-gray-200 hover:text-white transition-colors font-medium"
-                >
-                  Workouts
-                </Link>
-                <Link
-                  to="/meals"
-                  className="text-gray-200 hover:text-white transition-colors font-medium"
-                >
-                  Meals
-                </Link>
-                <Link
-                  to="/progress"
-                  className="text-gray-200 hover:text-white transition-colors font-medium"
-                >
-                  Progress
-                </Link>
-                <Link
-                  to="/feed"
-                  className="text-gray-200 hover:text-white transition-colors font-medium"
-                >
-                  Feed
-                </Link>
-                <Link
-                  to="/profile"
-                  className="text-gray-200 hover:text-white transition-colors font-medium"
-                >
-                  Profile
-                </Link>
-
-                {userName && (
-                  <div className="flex items-center space-x-2 text-gray-100 text-sm">
-                    <span className="font-medium">Hi, {userName}</span>
-                  </div>
-                )}
-
-                {/* User Menu */}
-                <div className="flex items-center space-x-4">
-                  <button
-                    onClick={handleLogout}
-                    className="bg-red-600 hover:bg-red-700 text-white transition-colors font-medium px-4 py-2 rounded"
+          <div className="hidden md:flex flex-1 items-center">
+            <div className="flex-1 flex justify-center items-center space-x-8">
+              {isAuthenticated && (
+                <>
+                  <Link
+                    to="/dashboard"
+                    className="text-gray-200 hover:text-white transition-colors font-medium"
                   >
-                    Logout
-                  </button>
-                </div>
-              </>
-            ) : (
-              <>
-                <Link
-                  to="/login"
-                  className="text-gray-200 hover:text-white transition-colors font-medium"
+                    Dashboard
+                  </Link>
+                  <Link
+                    to="/workouts"
+                    className="text-gray-200 hover:text-white transition-colors font-medium"
+                  >
+                    Workouts
+                  </Link>
+                  <Link
+                    to="/meals"
+                    className="text-gray-200 hover:text-white transition-colors font-medium"
+                  >
+                    Meals
+                  </Link>
+                  <Link
+                    to="/progress"
+                    className="text-gray-200 hover:text-white transition-colors font-medium"
+                  >
+                    Progress
+                  </Link>
+                  <Link
+                    to="/feed"
+                    className="text-gray-200 hover:text-white transition-colors font-medium"
+                  >
+                    Feed
+                  </Link>
+                  <Link
+                    to="/profile"
+                    className="text-gray-200 hover:text-white transition-colors font-medium"
+                  >
+                    Profile
+                  </Link>
+                </>
+              )}
+            </div>
+
+            <div className="flex justify-end items-center space-x-4">
+              {isAuthenticated ? (
+                <button
+                  onClick={handleLogout}
+                  className="bg-red-600 hover:bg-red-700 text-white transition-colors font-medium px-4 py-2 rounded"
                 >
-                  Login
-                </Link>
-                <Link to="/register" className="btn-primary">
-                  Sign Up
-                </Link>
-              </>
-            )}
+                  Logout
+                </button>
+              ) : (
+                <>
+                  <Link
+                    to="/login"
+                    className="text-gray-200 hover:text-white transition-colors font-medium"
+                  >
+                    Login
+                  </Link>
+                  <Link to="/register" className="btn-primary">
+                    Sign Up
+                  </Link>
+                </>
+              )}
+            </div>
           </div>
 
-          {/* Mobile menu button */}
           <div className="md:hidden flex items-center">
             <button
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
@@ -131,17 +125,11 @@ const Navbar = ({ isAuthenticated, userName, onLogout }: NavbarProps) => {
         </div>
       </div>
 
-      {/* Mobile Navigation */}
       {isMobileMenuOpen && (
         <div className="md:hidden bg-gray-900 border-t border-gray-700">
           <div className="px-2 pt-2 pb-3 space-y-1">
             {isAuthenticated ? (
               <>
-              {userName && (
-                  <div className="px-3 py-2 text-gray-200 text-sm font-medium">
-                    Logged in as {userName}
-                  </div>
-                )}
                 <Link
                   to="/dashboard"
                   className="block px-3 py-2 rounded-md text-base font-medium text-gray-200 hover:text-white hover:bg-gray-800"

@@ -11,25 +11,25 @@ const minioClient = new Client({
     secretKey: process.env.MINIO_SECRET_KEY || 'minioadmin',
 });
 
-const bucketName = process.env.MINIO_BUCKET_NAME || 'cs554-finalproject';
+export const minioBucketName = process.env.MINIO_BUCKET_NAME || 'cs554-finalproject';
 
 export const initMinIO = async () => {
-    const bucketExists = await minioClient.bucketExists(bucketName);
+    const bucketExists = await minioClient.bucketExists(minioBucketName);
     if (!bucketExists){
-        await minioClient.makeBucket(bucketName, process.env.MINIO_REGION || 'us-east-1');
+        await minioClient.makeBucket(minioBucketName, process.env.MINIO_REGION || 'us-east-1');
     }
 };
 
 export const minioUtils = {
     async uploadFile(fileName: string, fileBuffer: Buffer, contentType: string): Promise<string> {
-        await minioClient.putObject(bucketName, fileName, fileBuffer, fileBuffer.length, {'Content-Type': contentType});
+        await minioClient.putObject(minioBucketName, fileName, fileBuffer, fileBuffer.length, {'Content-Type': contentType});
         return fileName;
     },
     async getFileUrl(fileName: string): Promise<string> {
-        return await minioClient.presignedGetObject(bucketName, fileName, 24 * 60 * 60 * 7);
+        return await minioClient.presignedGetObject(minioBucketName, fileName, 24 * 60 * 60 * 7);
     },
     async deleteFile(fileName: string): Promise<void> {
-        await minioClient.removeObject(bucketName, fileName);
+        await minioClient.removeObject(minioBucketName, fileName);
     },
     generatefileName(originalName: string, userId: string): string {
         const timestamp = Date.now();

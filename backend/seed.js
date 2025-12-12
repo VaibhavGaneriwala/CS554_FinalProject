@@ -7,7 +7,8 @@ dotenv.config();
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/cs554-finalproject';
 
 const UserSchema = new mongoose.Schema({
-  name: String,
+  firstName: String,
+  lastName: String,
   email: String,
   password: String,
   age: Number,
@@ -103,19 +104,20 @@ const seedData = async () => {
     console.log('Cleared existing data');
 
     console.log('Creating users...');
-    const hashedPassword = await bcrypt.hash('password123', 10);
+    const hashedPassword = await bcrypt.hash('PasswordPassword@123', 10);
     
     const users = await User.insertMany([
-      { name: 'John Doe', email: 'john@example.com', password: hashedPassword, age: 25, height: 180, weight: 75 },
-      { name: 'Jane Smith', email: 'jane@example.com', password: hashedPassword, age: 28, height: 165, weight: 60 },
-      { name: 'Mike Johnson', email: 'mike@example.com', password: hashedPassword, age: 32, height: 175, weight: 80 },
-      { name: 'Sarah Williams', email: 'sarah@example.com', password: hashedPassword, age: 24, height: 170, weight: 65 },
-      { name: 'David Brown', email: 'david@example.com', password: hashedPassword, age: 30, height: 185, weight: 90 },
-      { name: 'Emily Davis', email: 'emily@example.com', password: hashedPassword, age: 27, height: 160, weight: 55 },
-      { name: 'Chris Wilson', email: 'chris@example.com', password: hashedPassword, age: 29, height: 178, weight: 78 },
-      { name: 'Amanda Taylor', email: 'amanda@example.com', password: hashedPassword, age: 26, height: 168, weight: 62 },
-      { name: 'James Martinez', email: 'james@example.com', password: hashedPassword, age: 31, height: 182, weight: 85 },
-      { name: 'Lisa Anderson', email: 'lisa@example.com', password: hashedPassword, age: 23, height: 163, weight: 58 },
+      { firstName: 'John', lastName: 'Doe', email: 'john@example.com', password: hashedPassword, age: 25, height: 71, weight: 75 },
+      { firstName: 'Jane', lastName: 'Smith', email: 'jane@example.com', password: hashedPassword, age: 28, height: 65, weight: 60 },
+      { firstName: 'Mike', lastName: 'Johnson', email: 'mike@example.com', password: hashedPassword, age: 32, height: 69, weight: 80 },
+      { firstName: 'Sarah', lastName: 'Williams', email: 'sarah@example.com', password: hashedPassword, age: 24, height: 67, weight: 65 },
+      { firstName: 'David', lastName: 'Brown', email: 'david@example.com', password: hashedPassword, age: 30, height: 73, weight: 90 },
+      { firstName: 'Emily', lastName: 'Davis', email: 'emily@example.com', password: hashedPassword, age: 27, height: 63, weight: 55 },
+      { firstName: 'Chris', lastName: 'Wilson', email: 'chris@example.com', password: hashedPassword, age: 29, height: 70, weight: 78 },
+      { firstName: 'Amanda', lastName: 'Taylor', email: 'amanda@example.com', password: hashedPassword, age: 26, height: 66, weight: 62 },
+      { firstName: 'James', lastName: 'Martinez', email: 'james@example.com', password: hashedPassword, age: 31, height: 72, weight: 85 },
+      { firstName: 'Lisa', lastName: 'Anderson', email: 'lisa@example.com', password: hashedPassword, age: 23, height: 64, weight: 58 },
+      { firstName: 'Vaibhav', lastName: 'Ganeriwala', email: 'vaibhav@ganeriwala.com', password: hashedPassword, age: 23, height: 64, weight: 58 },
     ]);
     console.log(`Created ${users.length} users`);
 

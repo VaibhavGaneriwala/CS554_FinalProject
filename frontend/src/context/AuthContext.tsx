@@ -26,23 +26,18 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         const token = authService.getToken();
         if (token && mounted) {
           const storedUser = authService.getStoredUser();
-          if (storedUser) {
-            setUser(storedUser);
-            setLoading(false);
-          } else {
-            try {
-              const response = await authService.getCurrentUser();
-              if (response.success && response.data && mounted) {
-                setUser(response.data);
-                authService.setStoredUser(response.data);
-              }
-            } catch (error) {
-              authService.logout();
+          if (storedUser) setUser(storedUser);
+          try {
+            const response = await authService.getCurrentUser();
+            if (response.success && response.data && mounted) {
+              setUser(response.data);
+              authService.setStoredUser(response.data);
             }
+          } catch (_error) {
+            console.error('Error getting current user:', _error);
           }
         }
       } catch (error) {
-        authService.logout();
       } finally {
         if (mounted) {
           setLoading(false);
@@ -117,7 +112,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     register,
     logout,
     updateUser,
-    isAuthenticated: !!user,
+    isAuthenticated: !!authService.getToken(),
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

@@ -2,7 +2,6 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import Navbar from '../components/Navbar';
-import { formatHeight } from '../utils/heightConverter';
 import { Post, Pagination } from '../types';
 import { postService } from '../services/postService';
 import PostCard from '../components/Post';
@@ -170,7 +169,7 @@ const Dashboard: React.FC = () => {
 
   return (
     <>
-      <Navbar isAuthenticated={true} userName={user?.firstName} onLogout={handleLogout} />
+      <Navbar isAuthenticated={true} onLogout={handleLogout} />
       <div className="p-5 max-w-7xl mx-auto">
         <div className="p-5 bg-gray-100 rounded-lg mb-8">
           <h2 className="text-2xl font-semibold mb-2">

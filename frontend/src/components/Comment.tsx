@@ -49,7 +49,6 @@ const Comment: React.FC<CommentProps> = ({ comments, onAdd }) => {
         )}
       </div>
 
-      {/* Add Comment Form */}
       <form onSubmit={handleSubmit} className="flex items-center gap-2">
         <input
           type="text"

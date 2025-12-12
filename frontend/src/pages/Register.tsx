@@ -25,6 +25,11 @@ const Register: React.FC = () => {
     const {register} = useAuth();
     const navigate = useNavigate();
 
+    const isStrongPassword = (password: string): boolean => {
+        const pw = password.trim();
+        return /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{16,}$/.test(pw);
+    };
+
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const {name, value} = e.target;
         setFormData((prev) => ({
@@ -37,6 +42,11 @@ const Register: React.FC = () => {
         e.preventDefault();
         setError('');
         
+        if (!isStrongPassword(formData.password)) {
+            setError('Password must be at least 16 characters long and include uppercase, lowercase, number, and symbol');
+            return;
+        }
+
         if (formData.password !== confirmPassword) {
             setError('Passwords do not match');
             return;

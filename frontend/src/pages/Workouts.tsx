@@ -6,7 +6,7 @@ import { workoutService } from '../services/workoutService';
 import { Workout, WorkoutFormData, Exercise } from '../types';
 
 const Workouts: React.FC = () => {
-  const { user, logout } = useAuth();
+  const { logout } = useAuth();
   const navigate = useNavigate();
   const [workouts, setWorkouts] = useState<Workout[]>([]);
   const [loading, setLoading] = useState(true);
@@ -31,23 +31,18 @@ const Workouts: React.FC = () => {
       setLoading(true);
       setError(null);
       const response = await workoutService.getWorkouts();
-      console.log('Workouts response:', response); // Debug log
       if (response.success && response.data) {
-        // Backend returns: { success: true, data: { workouts: [...], total: ..., pagination: {...} } }
         let workoutsList: Workout[] = [];
         if (response.data.workouts && Array.isArray(response.data.workouts)) {
           workoutsList = response.data.workouts;
         } else if (Array.isArray(response.data)) {
           workoutsList = response.data;
         }
-        console.log('Workouts list:', workoutsList, 'Count:', workoutsList.length); // Debug log
         setWorkouts(workoutsList);
       } else {
-        console.log('No data in response or not successful');
         setWorkouts([]);
       }
     } catch (err: any) {
-      console.error('Error loading workouts:', err); // Debug log
       setError(err.message || 'Failed to load workouts');
       setWorkouts([]);
     } finally {
@@ -97,13 +92,11 @@ const Workouts: React.FC = () => {
     e.preventDefault();
     setError(null);
 
-    // Validate form data
     if (!formData.title || !formData.split || formData.exercises.length === 0) {
       setError('Please fill in all required fields');
       return;
     }
 
-    // Validate exercises
     const invalidExercises = formData.exercises.filter(ex => 
       !ex.name || !ex.name.trim() || ex.sets < 1 || ex.reps < 1 || ex.weight < 0
     );
@@ -114,7 +107,6 @@ const Workouts: React.FC = () => {
     }
 
     try {
-      // Prepare data for API - ensure exercises have proper structure
       const workoutData: WorkoutFormData = {
         title: formData.title.trim(),
         split: formData.split,
@@ -133,7 +125,7 @@ const Workouts: React.FC = () => {
       let updatedWorkout: Workout | null = null;
       if (editingWorkout) {
         const response = await workoutService.updateWorkout(editingWorkout._id, workoutData);
-        console.log('Update response:', response); // Debug log
+        console.log('Update response:', response);
         if (response.success && response.data) {
           updatedWorkout = response.data;
         }
@@ -148,23 +140,18 @@ const Workouts: React.FC = () => {
       setEditingWorkout(null);
       resetForm();
       
-      // Update local state immediately if we have the updated workout
       if (updatedWorkout) {
         setWorkouts(prev => {
           if (editingWorkout) {
-            // Replace the updated workout in the list
             return prev.map(w => w._id === updatedWorkout!._id ? updatedWorkout! : w);
           } else {
-            // Add the new workout to the beginning of the list
             return [updatedWorkout!, ...prev];
           }
         });
       }
       
-      // Also reload from server to ensure we have the latest data
       await loadWorkouts();
     } catch (err: any) {
-      // Extract error message from axios error response
       if (err.response?.data) {
         const errorData = err.response.data;
         if (errorData.errors && Array.isArray(errorData.errors)) {
@@ -205,16 +192,13 @@ const Workouts: React.FC = () => {
     try {
       setError(null);
       const response = await workoutService.deleteWorkout(workoutId);
-      console.log('Delete response:', response); // Debug log
+      console.log('Delete response:', response);
       
-      // Update local state immediately
       setWorkouts(prev => prev.filter(w => w._id !== workoutId));
       
-      // Also reload from server to ensure consistency
       await loadWorkouts();
     } catch (err: any) {
-      console.error('Error deleting workout:', err); // Debug log
-      // Extract error message from axios error response
+      console.error('Error deleting workout:', err);
       if (err.response?.data) {
         const errorData = err.response.data;
         if (errorData.message) {

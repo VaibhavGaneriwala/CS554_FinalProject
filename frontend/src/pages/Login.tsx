@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import './Auth.css';
@@ -9,15 +9,9 @@ const Login: React.FC = () => {
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
-    // const errorRef = useRef<string>('');
     const formRef = useRef<HTMLFormElement>(null);
     const { login } = useAuth();
     const navigate = useNavigate();
-
-    // Keep error ref in sync with error state
-    // useEffect(() => {
-    //     errorRef.current = error;
-    // }, [error]);
 
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
@@ -27,18 +21,14 @@ const Login: React.FC = () => {
             return;
         }
         
-        // Clear previous error
         setError('');
-        //errorRef.current = '';
         setLoading(true);
         
         try {
             await login({email, password});
-            // Only navigate on success - clear error if successful
             setError('');
             navigate('/dashboard');
         } catch (err: any) {
-            // Extract error message
             let errorMessage = 'Login Failed';
             if (err?.message) {
                 errorMessage = err.message;
@@ -48,16 +38,7 @@ const Login: React.FC = () => {
                 errorMessage = err.response.data.errors.join(', ');
             }
             
-            // Set error in both state and ref
             setError(errorMessage);
-            //errorRef.current = errorMessage;
-            
-            // Force a small delay to ensure state update
-            // setTimeout(() => {
-            //     if (errorRef.current) {
-            //         setError(errorRef.current);
-            //     }
-            // }, 0);
         } finally {
             setLoading(false);
         }
@@ -65,12 +46,10 @@ const Login: React.FC = () => {
 
     const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setEmail(e.target.value);
-        // Don't clear error on input change - let user see the error until they submit again
     };
 
     const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setPassword(e.target.value);
-        // Don't clear error on input change - let user see the error until they submit again
     };
     return (
         <div className="auth-container">
@@ -112,7 +91,6 @@ const Login: React.FC = () => {
                                 disabled={loading} 
                                 className='auth-button'
                                 onClick={(e) => {
-                                    // Additional safeguard
                                     if (loading) {
                                         e.preventDefault();
                                         e.stopPropagation();

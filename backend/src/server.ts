@@ -8,6 +8,7 @@ import { errorHandler, notFoundHandler } from './middleware/errorHandler';
 
 import authRoutes from './routes/auth';
 import userRoutes from './routes/users';
+import fileRoutes from './routes/files';
 import workoutRoutes from './routes/workout';
 import mealRoutes from './routes/meals';
 import progressRoutes from './routes/progress';
@@ -43,6 +44,7 @@ app.get('/health', (_req, res) => {
 
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
+app.use('/api/files', fileRoutes);
 app.use('/api/workouts', workoutRoutes);
 app.use('/api/meals', mealRoutes);
 app.use('/api/progress', progressRoutes);
