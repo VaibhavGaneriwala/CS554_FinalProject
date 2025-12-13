@@ -29,4 +29,10 @@ export const postService = {
         const response = await api.delete<ApiResponse>(`/posts/${postId}`);
         return response.data;
     },
+    addReply: async (commentId: string, text: string): Promise<ApiResponse<Comment>> => {
+        const response = await api.post<ApiResponse<Comment>>(`/posts/comments/${commentId}/replies`,{ text });
+        return response.data;
+    },
+
+
 };
