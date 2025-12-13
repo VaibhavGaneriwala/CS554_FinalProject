@@ -5,9 +5,15 @@ interface CommentProps {
   comments: Comments[];
   onAdd: (text: string) => void | Promise<void>;
   onReply?: (commentId: string, text: string) => void | Promise<void>;
+  hideComposer?: boolean;
 }
 
-const Comment: React.FC<CommentProps> = ({ comments, onAdd, onReply }) => {
+const Comment: React.FC<CommentProps> = ({
+  comments,
+  onAdd,
+  onReply,
+  hideComposer = false,
+}) => {
   const [text, setText] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -128,9 +134,13 @@ const Comment: React.FC<CommentProps> = ({ comments, onAdd, onReply }) => {
               <p className="text-red-600 text-xs mt-1">{replyError}</p>
             )}
 
-            {onReply && (c as any).replies?.length > 0 && (
+            {(c as any).replies?.length > 0 && (
               <div className="ml-4 mt-2">
-                <Comment comments={(c as any).replies || []} onAdd={() => {}} />
+                <Comment
+                  comments={(c as any).replies || []}
+                  onAdd={() => {}}
+                  hideComposer
+                />
               </div>
             )}
           </div>
@@ -143,25 +153,29 @@ const Comment: React.FC<CommentProps> = ({ comments, onAdd, onReply }) => {
         )}
       </div>
 
-      <form onSubmit={handleSubmit} className="flex items-center gap-2">
-        <input
-          type="text"
-          value={text}
-          placeholder="Add a comment..."
-          onChange={(e) => setText(e.target.value)}
-          className="w-full border border-gray-300 rounded px-2 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500"
-        />
+      {!hideComposer && (
+        <>
+          <form onSubmit={handleSubmit} className="flex items-center gap-2">
+            <input
+              type="text"
+              value={text}
+              placeholder="Add a comment..."
+              onChange={(e) => setText(e.target.value)}
+              className="w-full border border-gray-300 rounded px-2 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
 
-        <button
-          type="submit"
-          disabled={submitting}
-          className="text-xs px-3 py-1 rounded bg-gray-800 text-white hover:bg-gray-900 disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          {submitting ? "Posting..." : "Post"}
-        </button>
-      </form>
+            <button
+              type="submit"
+              disabled={submitting}
+              className="text-xs px-3 py-1 rounded bg-gray-800 text-white hover:bg-gray-900 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {submitting ? "Posting..." : "Post"}
+            </button>
+          </form>
 
-      {error && <p className="text-red-600 text-xs mt-1">{error}</p>}
+          {error && <p className="text-red-600 text-xs mt-1">{error}</p>}
+        </>
+      )}
     </div>
   );
 };
