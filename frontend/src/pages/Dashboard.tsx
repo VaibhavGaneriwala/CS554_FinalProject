@@ -1,26 +1,37 @@
-import React, { useEffect, useState, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
-import Navbar from '../components/Navbar';
-import { Post, Pagination } from '../types';
-import { postService } from '../services/postService';
-import PostCard from '../components/Post';
+import React, { useEffect, useState, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
+import Navbar from "../components/Navbar";
+import { Post, Pagination } from "../types";
+import { postService } from "../services/postService";
+import PostCard from "../components/Post";
 
 const formatPostDate = (dateString: string): string => {
   const date = new Date(dateString);
-  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-                  'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  const months = [
+    "Jan",
+    "Feb",
+    "Mar",
+    "Apr",
+    "May",
+    "Jun",
+    "Jul",
+    "Aug",
+    "Sep",
+    "Oct",
+    "Nov",
+    "Dec",
+  ];
   const month = months[date.getMonth()];
   const day = date.getDate();
   const year = date.getFullYear();
   let hours = date.getHours();
   const minutes = date.getMinutes();
-  const ampm = hours >= 12 ? 'PM' : 'AM';
+  const ampm = hours >= 12 ? "PM" : "AM";
   hours = hours % 12 || 12;
   const minutesStr = minutes < 10 ? `0${minutes}` : `${minutes}`;
   return `${month} ${day}, ${year} • ${hours}:${minutesStr} ${ampm}`;
 };
-
 
 const Dashboard: React.FC = () => {
   const { user, logout } = useAuth();
@@ -30,10 +41,12 @@ const Dashboard: React.FC = () => {
   const [pagination, setPagination] = useState<Pagination | null>(null);
   const [feedLoading, setFeedLoading] = useState(false);
   const [feedError, setFeedError] = useState<string | null>(null);
-  const [filterType, setFilterType] = useState<string>('all');
+  const [filterType, setFilterType] = useState<string>("all");
   const [page, setPage] = useState<number>(1);
-  const [newPostType, setNewPostType] = useState<'workout' | 'meal' | 'progress'>('workout');
-  const [newPostContent, setNewPostContent] = useState('');
+  const [newPostType, setNewPostType] = useState<
+    "workout" | "meal" | "progress"
+  >("workout");
+  const [newPostContent, setNewPostContent] = useState("");
   const [composerLoading, setComposerLoading] = useState(false);
   const [composerError, setComposerError] = useState<string | null>(null);
   const [likingPostId, setLikingPostId] = useState<string | null>(null);
@@ -43,16 +56,16 @@ const Dashboard: React.FC = () => {
     setFeedLoading(true);
     setFeedError(null);
     try {
-      const typeParam = filterType === 'all' ? undefined : filterType;
+      const typeParam = filterType === "all" ? undefined : filterType;
       const res = await postService.getPosts(undefined, typeParam, page, 10);
       if (res.success && res.data) {
         setPosts(res.data.posts);
         setPagination(res.data.pagination);
       } else {
-        setFeedError(res.message || 'Failed to load feed');
+        setFeedError(res.message || "Failed to load feed");
       }
     } catch (err: any) {
-      setFeedError(err.message || 'Failed to load feed');
+      setFeedError(err.message || "Failed to load feed");
     } finally {
       setFeedLoading(false);
     }
@@ -64,16 +77,16 @@ const Dashboard: React.FC = () => {
       setFeedLoading(true);
       setFeedError(null);
       try {
-        const typeParam = filterType === 'all' ? undefined : filterType;
+        const typeParam = filterType === "all" ? undefined : filterType;
         const res = await postService.getPosts(undefined, typeParam, page, 10);
         if (res.success && res.data) {
           setPosts(res.data.posts);
           setPagination(res.data.pagination);
         } else {
-          setFeedError(res.message || 'Failed to load feed');
+          setFeedError(res.message || "Failed to load feed");
         }
       } catch (err: any) {
-        setFeedError(err.message || 'Failed to load feed');
+        setFeedError(err.message || "Failed to load feed");
       } finally {
         setFeedLoading(false);
       }
@@ -89,7 +102,7 @@ const Dashboard: React.FC = () => {
 
   const handleLogout = () => {
     logout();
-    navigate('/login');
+    navigate("/login");
   };
 
   const handleCreatePost = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -98,7 +111,7 @@ const Dashboard: React.FC = () => {
 
     const trimmed = newPostContent.trim();
     if (!trimmed) {
-      setComposerError('Please enter some content for your post.');
+      setComposerError("Please enter some content for your post.");
       return;
     }
 
@@ -108,20 +121,20 @@ const Dashboard: React.FC = () => {
     try {
       const res = await postService.createPost({
         type: newPostType,
-        content: trimmed
+        content: trimmed,
       });
 
       if (!res.success) {
-        setComposerError(res.message || 'Failed to create post.');
+        setComposerError(res.message || "Failed to create post.");
         return;
       }
 
-      setNewPostContent('');
-      setNewPostType('workout');
+      setNewPostContent("");
+      setNewPostType("workout");
 
       await loadPosts();
     } catch (err: any) {
-      setComposerError(err.message || 'Failed to create post.');
+      setComposerError(err.message || "Failed to create post.");
     } finally {
       setComposerLoading(false);
     }
@@ -137,13 +150,13 @@ const Dashboard: React.FC = () => {
       const res = await postService.likePost(postId);
 
       if (!res.success) {
-        setFeedError(res.message || 'Failed to update like.');
+        setFeedError(res.message || "Failed to update like.");
         return;
       }
 
       await loadPosts();
     } catch (err: any) {
-      setFeedError(err.message || 'Failed to update like.');
+      setFeedError(err.message || "Failed to update like.");
     } finally {
       setLikingPostId(null);
     }
@@ -153,19 +166,30 @@ const Dashboard: React.FC = () => {
     if (!user) return;
 
     setFeedError(null);
-    try {
-      const res = await postService.addComment(postId, text);
 
-      if (!res.success) {
-        setFeedError(res.message || 'Failed to add comment.');
-        return;
-      }
+    const res = await postService.addComment(postId, text);
 
-      await loadPosts();
-    } catch (err: any) {
-      setFeedError(err.message || 'Failed to add comment.');
+    if (!res.success) {
+      throw new Error(res.message || "Failed to add comment.");
     }
+
+    await loadPosts();
   };
+
+    const handleAddReply = async (commentId: string, text: string) => {
+    if (!user) return;
+
+    setFeedError(null);
+
+    const res = await postService.addReply(commentId, text);
+
+    if (!res.success) {
+      throw new Error(res.message || "Failed to add reply.");
+    }
+
+    await loadPosts();
+  };
+
 
   return (
     <>
@@ -173,7 +197,12 @@ const Dashboard: React.FC = () => {
       <div className="p-5 max-w-7xl mx-auto">
         <div className="p-5 bg-gray-100 rounded-lg mb-8">
           <h2 className="text-2xl font-semibold mb-2">
-            Welcome Back, {user?.firstName ? user.firstName.charAt(0).toUpperCase() + user.firstName.slice(1).toLowerCase() : ''}!
+            Welcome Back,{" "}
+            {user?.firstName
+              ? user.firstName.charAt(0).toUpperCase() +
+                user.firstName.slice(1).toLowerCase()
+              : ""}
+            !
           </h2>
           <p className="text-gray-700 mb-2">What would you like to do today?</p>
         </div>
@@ -181,11 +210,11 @@ const Dashboard: React.FC = () => {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
           <button
             type="button"
-            onClick={() => handleFilterChange('workout')}
+            onClick={() => handleFilterChange("workout")}
             className={`p-5 rounded-lg text-center transition-colors ${
-              filterType === 'workout'
-                ? 'bg-blue-100 ring-2 ring-blue-400'
-                : 'bg-blue-50 hover:bg-blue-100'
+              filterType === "workout"
+                ? "bg-blue-100 ring-2 ring-blue-400"
+                : "bg-blue-50 hover:bg-blue-100"
             }`}
           >
             <h3 className="text-xl font-semibold mb-2">Workouts</h3>
@@ -194,11 +223,11 @@ const Dashboard: React.FC = () => {
 
           <button
             type="button"
-            onClick={() => handleFilterChange('meal')}
+            onClick={() => handleFilterChange("meal")}
             className={`p-5 rounded-lg text-center transition-colors ${
-              filterType === 'meal'
-                ? 'bg-purple-100 ring-2 ring-purple-400'
-                : 'bg-purple-50 hover:bg-purple-100'
+              filterType === "meal"
+                ? "bg-purple-100 ring-2 ring-purple-400"
+                : "bg-purple-50 hover:bg-purple-100"
             }`}
           >
             <h3 className="text-xl font-semibold mb-2">Meals</h3>
@@ -207,11 +236,11 @@ const Dashboard: React.FC = () => {
 
           <button
             type="button"
-            onClick={() => handleFilterChange('progress')}
+            onClick={() => handleFilterChange("progress")}
             className={`p-5 rounded-lg text-center transition-colors ${
-              filterType === 'progress'
-                ? 'bg-green-100 ring-2 ring-green-400'
-                : 'bg-green-50 hover:bg-green-100'
+              filterType === "progress"
+                ? "bg-green-100 ring-2 ring-green-400"
+                : "bg-green-50 hover:bg-green-100"
             }`}
           >
             <h3 className="text-xl font-semibold mb-2">Progress</h3>
@@ -220,11 +249,11 @@ const Dashboard: React.FC = () => {
 
           <button
             type="button"
-            onClick={() => handleFilterChange('all')}
+            onClick={() => handleFilterChange("all")}
             className={`p-5 rounded-lg text-center transition-colors ${
-              filterType === 'all'
-                ? 'bg-orange-100 ring-2 ring-orange-400'
-                : 'bg-orange-50 hover:bg-orange-100'
+              filterType === "all"
+                ? "bg-orange-100 ring-2 ring-orange-400"
+                : "bg-orange-50 hover:bg-orange-100"
             }`}
           >
             <h3 className="text-xl font-semibold mb-2">Social Feed</h3>
@@ -239,33 +268,33 @@ const Dashboard: React.FC = () => {
             <div className="flex flex-wrap gap-2 text-sm">
               <button
                 type="button"
-                onClick={() => setNewPostType('workout')}
+                onClick={() => setNewPostType("workout")}
                 className={`px-3 py-1 rounded-full border ${
-                  newPostType === 'workout'
-                    ? 'bg-blue-600 text-white border-blue-600'
-                    : 'bg-white text-gray-700 border-gray-300 hover:bg-blue-50'
+                  newPostType === "workout"
+                    ? "bg-blue-600 text-white border-blue-600"
+                    : "bg-white text-gray-700 border-gray-300 hover:bg-blue-50"
                 }`}
               >
                 Workout
               </button>
               <button
                 type="button"
-                onClick={() => setNewPostType('meal')}
+                onClick={() => setNewPostType("meal")}
                 className={`px-3 py-1 rounded-full border ${
-                  newPostType === 'meal'
-                    ? 'bg-purple-600 text-white border-purple-600'
-                    : 'bg-white text-gray-700 border-gray-300 hover:bg-purple-50'
+                  newPostType === "meal"
+                    ? "bg-purple-600 text-white border-purple-600"
+                    : "bg-white text-gray-700 border-gray-300 hover:bg-purple-50"
                 }`}
               >
                 Meal
               </button>
               <button
                 type="button"
-                onClick={() => setNewPostType('progress')}
+                onClick={() => setNewPostType("progress")}
                 className={`px-3 py-1 rounded-full border ${
-                  newPostType === 'progress'
-                    ? 'bg-green-600 text-white border-green-600'
-                    : 'bg-white text-gray-700 border-gray-300 hover:bg-green-50'
+                  newPostType === "progress"
+                    ? "bg-green-600 text-white border-green-600"
+                    : "bg-white text-gray-700 border-gray-300 hover:bg-green-50"
                 }`}
               >
                 Progress
@@ -290,7 +319,7 @@ const Dashboard: React.FC = () => {
                 disabled={composerLoading}
                 className="px-4 py-2 rounded-md bg-blue-600 text-white text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed hover:bg-blue-700"
               >
-                {composerLoading ? 'Posting...' : 'Post'}
+                {composerLoading ? "Posting..." : "Post"}
               </button>
             </div>
           </form>
@@ -299,51 +328,53 @@ const Dashboard: React.FC = () => {
         <div className="mt-10 p-5 bg-white border border-gray-300 rounded-lg">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
             <h3 className="text-xl font-semibold">
-              {filterType === 'all'
-                ? 'Your Activity Feed'
-                : `Recent ${filterType.charAt(0).toUpperCase() + filterType.slice(1)} Posts`}
+              {filterType === "all"
+                ? "Your Activity Feed"
+                : `Recent ${
+                    filterType.charAt(0).toUpperCase() + filterType.slice(1)
+                  } Posts`}
             </h3>
             <div className="flex flex-wrap gap-2 text-sm">
               <button
                 type="button"
-                onClick={() => handleFilterChange('all')}
+                onClick={() => handleFilterChange("all")}
                 className={`px-3 py-1 rounded-full border ${
-                  filterType === 'all'
-                    ? 'bg-gray-900 text-white border-gray-900'
-                    : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-100'
+                  filterType === "all"
+                    ? "bg-gray-900 text-white border-gray-900"
+                    : "bg-white text-gray-700 border-gray-300 hover:bg-gray-100"
                 }`}
               >
                 All
               </button>
               <button
                 type="button"
-                onClick={() => handleFilterChange('workout')}
+                onClick={() => handleFilterChange("workout")}
                 className={`px-3 py-1 rounded-full border ${
-                  filterType === 'workout'
-                    ? 'bg-blue-600 text-white border-blue-600'
-                    : 'bg-white text-gray-700 border-gray-300 hover:bg-blue-50'
+                  filterType === "workout"
+                    ? "bg-blue-600 text-white border-blue-600"
+                    : "bg-white text-gray-700 border-gray-300 hover:bg-blue-50"
                 }`}
               >
                 Workouts
               </button>
               <button
                 type="button"
-                onClick={() => handleFilterChange('meal')}
+                onClick={() => handleFilterChange("meal")}
                 className={`px-3 py-1 rounded-full border ${
-                  filterType === 'meal'
-                    ? 'bg-purple-600 text-white border-purple-600'
-                    : 'bg-white text-gray-700 border-gray-300 hover:bg-purple-50'
+                  filterType === "meal"
+                    ? "bg-purple-600 text-white border-purple-600"
+                    : "bg-white text-gray-700 border-gray-300 hover:bg-purple-50"
                 }`}
               >
                 Meals
               </button>
               <button
                 type="button"
-                onClick={() => handleFilterChange('progress')}
+                onClick={() => handleFilterChange("progress")}
                 className={`px-3 py-1 rounded-full border ${
-                  filterType === 'progress'
-                    ? 'bg-green-600 text-white border-green-600'
-                    : 'bg-white text-gray-700 border-gray-300 hover:bg-green-50'
+                  filterType === "progress"
+                    ? "bg-green-600 text-white border-green-600"
+                    : "bg-white text-gray-700 border-gray-300 hover:bg-green-50"
                 }`}
               >
                 Progress
@@ -381,7 +412,6 @@ const Dashboard: React.FC = () => {
             </div>
           )}
 
-          
           {pagination && pagination.totalPages > 1 && (
             <div className="flex justify-end items-center gap-3 mt-4 text-sm">
               <button
@@ -398,7 +428,9 @@ const Dashboard: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setPage((p) => p + 1)}
-                disabled={pagination.hasMore === false || page >= pagination.totalPages}
+                disabled={
+                  pagination.hasMore === false || page >= pagination.totalPages
+                }
                 className="px-3 py-1 rounded border border-gray-300 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-100"
               >
                 Next
@@ -407,10 +439,11 @@ const Dashboard: React.FC = () => {
           )}
         </div>
 
-
         <div className="mt-10 p-5 bg-white border border-gray-300 rounded-lg">
           <h3 className="text-xl font-semibold mb-3">Getting Started</h3>
-          <p className="mb-3">This is your fitness tracking dashboard. Here you can:</p>
+          <p className="mb-3">
+            This is your fitness tracking dashboard. Here you can:
+          </p>
           <ul className="list-disc list-inside space-y-1 mb-3">
             <li>Log your workouts and track exercises</li>
             <li>Record meals and monitor nutrition</li>
