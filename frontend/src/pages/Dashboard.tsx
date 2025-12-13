@@ -8,20 +8,7 @@ import PostCard from "../components/Post";
 
 const formatPostDate = (dateString: string): string => {
   const date = new Date(dateString);
-  const months = [
-    "Jan",
-    "Feb",
-    "Mar",
-    "Apr",
-    "May",
-    "Jun",
-    "Jul",
-    "Aug",
-    "Sep",
-    "Oct",
-    "Nov",
-    "Dec",
-  ];
+  const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec",];
   const month = months[date.getMonth()];
   const day = date.getDate();
   const year = date.getFullYear();
@@ -176,7 +163,7 @@ const Dashboard: React.FC = () => {
     await loadPosts();
   };
 
-    const handleAddReply = async (commentId: string, text: string) => {
+  const handleAddReply = async (commentId: string, text: string) => {
     if (!user) return;
 
     setFeedError(null);
@@ -189,7 +176,6 @@ const Dashboard: React.FC = () => {
 
     await loadPosts();
   };
-
 
   return (
     <>
@@ -406,6 +392,7 @@ const Dashboard: React.FC = () => {
                   currentUserId={user?.id}
                   onToggleLike={handleToggleLike}
                   onAddComment={handleAddComment}
+                  onAddReply={handleAddReply}
                   liking={likingPostId === post._id}
                 />
               ))}

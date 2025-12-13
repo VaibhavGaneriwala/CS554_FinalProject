@@ -130,11 +130,7 @@ const Comment: React.FC<CommentProps> = ({ comments, onAdd, onReply }) => {
 
             {onReply && (c as any).replies?.length > 0 && (
               <div className="ml-4 mt-2">
-                <Comment
-                  comments={(c as any).replies || []}
-                  onAdd={(text) => onReply(c._id, text)}
-                  onReply={onReply}
-                />
+                <Comment comments={(c as any).replies || []} onAdd={() => {}} />
               </div>
             )}
           </div>
