@@ -394,6 +394,7 @@ const Dashboard: React.FC = () => {
                   onAddComment={handleAddComment}
                   onAddReply={handleAddReply}
                   liking={likingPostId === post._id}
+                  onEdited={loadPosts}
                 />
               ))}
             </div>

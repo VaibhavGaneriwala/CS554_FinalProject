@@ -75,24 +75,16 @@ const PostSchema = new Schema<IPost>(
     workoutId: {
       type: String,
       ref: "Workout",
-      required: function (this: IPost) {
-        return this.type === "workout";
-      },
     },
     mealId: {
       type: String,
       ref: "Meal",
-      required: function (this: IPost) {
-        return this.type === "meal";
-      },
     },
     progressId: {
       type: String,
       ref: "Progress",
-      required: function (this: IPost) {
-        return this.type === "progress";
-      },
     },
+
     likes: {
       type: [String],
       default: [],

@@ -106,6 +106,9 @@ const Comment: React.FC<CommentProps> = ({
                 </button>
               )}
             </div>
+            <div className="mt-1">
+              <p className="text-xs text-gray-800 whitespace-pre-wrap">{c.text}</p>
+            </div>
 
             {replyingTo === c._id && onReply && (
               <form

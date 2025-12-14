@@ -1,7 +1,8 @@
-import React from "react";
+import React, { useState } from "react";
 import { Post } from "../types";
 import Like from "./Like";
 import Comment from "./Comment";
+import { postService } from "../services/postService";
 
 interface PostCardProps {
   post: Post;
@@ -11,6 +12,7 @@ interface PostCardProps {
   onAddComment: (postId: string, text: string) => void | Promise<void>;
   onAddReply?: (commentId: string, text: string) => void | Promise<void>;
   liking?: boolean;
+  onEdited?: () => void | Promise<void>;
 }
 
 const PostCard: React.FC<PostCardProps> = ({
@@ -21,10 +23,57 @@ const PostCard: React.FC<PostCardProps> = ({
   onAddComment,
   onAddReply,
   liking = false,
+  onEdited,
 }) => {
-  const isLikedByUser = currentUserId
-    ? post.likes.includes(currentUserId)
-    : false;
+  const isLikedByUser = currentUserId ? post.likes.includes(currentUserId) : false;
+  const isOwner = currentUserId ? post.userId === currentUserId : false;
+
+  const [isEditing, setIsEditing] = useState(false);
+  const [editValue, setEditValue] = useState(post.content);
+  const [editSaving, setEditSaving] = useState(false);
+  const [editError, setEditError] = useState<string | null>(null);
+
+  const handleStartEdit = () => {
+    setEditError(null);
+    setEditValue(post.content);
+    setIsEditing(true);
+  };
+
+  const handleCancelEdit = () => {
+    setEditError(null);
+    setEditValue(post.content);
+    setIsEditing(false);
+  };
+
+  const handleSaveEdit = async () => {
+    const trimmed = editValue.trim();
+    if (!trimmed) {
+      setEditError("Post content cannot be empty.");
+      return;
+    }
+
+    setEditError(null);
+    setEditSaving(true);
+
+    try {
+      const res = await postService.updatePost(post._id, { content: trimmed });
+
+      if (!res.success) {
+        setEditError(res.message || "Failed to update post.");
+        return;
+      }
+
+      setIsEditing(false);
+
+      if (onEdited) {
+        await onEdited();
+      }
+    } catch (err: any) {
+      setEditError(err.message || "Failed to update post.");
+    } finally {
+      setEditSaving(false);
+    }
+  };
 
   return (
     <div className="border border-gray-200 rounded-lg p-4 hover:shadow-sm transition-shadow">
@@ -43,13 +92,58 @@ const PostCard: React.FC<PostCardProps> = ({
           </p>
         </div>
 
-        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-700 capitalize">
-          {post.type}
-        </span>
+        <div className="flex items-center gap-2">
+          <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-700 capitalize">
+            {post.type}
+          </span>
+
+          {isOwner && !isEditing && (
+            <button
+              type="button"
+              onClick={handleStartEdit}
+              className="text-xs px-2 py-1 rounded border border-gray-300 hover:bg-gray-100"
+            >
+              Edit
+            </button>
+          )}
+        </div>
       </div>
 
       <div className="mt-2">
-        <p className="text-sm text-gray-800">{post.content}</p>
+        {!isEditing && <p className="text-sm text-gray-800">{post.content}</p>}
+
+        {isEditing && (
+          <div className="space-y-2">
+            <textarea
+              value={editValue}
+              onChange={(e) => setEditValue(e.target.value)}
+              rows={3}
+              className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+
+            {editError && <p className="text-sm text-red-600">{editError}</p>}
+
+            <div className="flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={handleCancelEdit}
+                disabled={editSaving}
+                className="px-3 py-1 rounded border border-gray-300 text-sm hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Cancel
+              </button>
+
+              <button
+                type="button"
+                onClick={handleSaveEdit}
+                disabled={editSaving}
+                className="px-3 py-1 rounded bg-blue-600 text-white text-sm hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {editSaving ? "Saving..." : "Save"}
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       <div className="mt-3 text-xs text-gray-600">

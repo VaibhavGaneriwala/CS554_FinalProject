@@ -18,7 +18,8 @@ const postValidation = [
   body("workoutId")
     .optional()
     .custom((value) => {
-      if (value && !isValidObjectId(value)) throw new Error("Invalid workout ID");
+      if (value && !isValidObjectId(value))
+        throw new Error("Invalid workout ID");
       return true;
     }),
   body("mealId")
@@ -30,7 +31,8 @@ const postValidation = [
   body("progressId")
     .optional()
     .custom((value) => {
-      if (value && !isValidObjectId(value)) throw new Error("Invalid progress ID");
+      if (value && !isValidObjectId(value))
+        throw new Error("Invalid progress ID");
       return true;
     }),
 ];
@@ -91,11 +93,62 @@ router.post(
         progressId,
       });
 
-      await invalidatePostsCache();
+      invalidatePostsCache().catch(() => {});
 
       res.status(201).json({
         success: true,
         message: "Post created successfully",
+        data: post,
+      });
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        message: "Internal server error",
+        error: error instanceof Error ? error.message : "Unknown error",
+      });
+    }
+  }
+);
+
+router.patch(
+  "/:postId",
+  authenticate,
+  param("postId").custom((value) => {
+    if (!isValidObjectId(value)) throw new Error("Invalid post ID");
+    return true;
+  }),
+  body("content")
+    .trim()
+    .isLength({ min: 1, max: 1000 })
+    .withMessage("Content must be between 1 and 1000 characters"),
+  handleValidationErrors,
+  async (req: Request, res: Response): Promise<void> => {
+    try {
+      const { postId } = req.params;
+      const userId = req.user?.userId;
+
+      const post = await Post.findById(postId);
+      if (!post) {
+        res.status(404).json({ success: false, message: "Post not found" });
+        return;
+      }
+
+      if (post.userId !== userId) {
+        res.status(403).json({
+          success: false,
+          message: "Unauthorized to edit this post",
+        });
+        return;
+      }
+
+      post.content = req.body.content;
+      await post.save();
+
+      invalidatePostsCache().catch(() => {});
+
+      res.status(200).json({
+        success: true,
+        message: "Post updated successfully",
         data: post,
       });
     } catch (error) {
@@ -159,9 +212,13 @@ router.get(
         .select("_id firstName lastName")
         .lean();
 
-      const usersById: Record<string, { firstName: string; lastName?: string }> = {};
+      const usersById: Record<string, { firstName: string; lastName?: string }> =
+        {};
       for (const u of users as any[]) {
-        usersById[String(u._id)] = { firstName: u.firstName, lastName: u.lastName };
+        usersById[String(u._id)] = {
+          firstName: u.firstName,
+          lastName: u.lastName,
+        };
       }
 
       for (const p of posts as any[]) {
@@ -259,7 +316,7 @@ router.post(
       if (likeIndex > -1) {
         post.likes.splice(likeIndex, 1);
         await post.save();
-        await invalidatePostsCache();
+        invalidatePostsCache().catch(() => {});
         res.status(200).json({
           success: true,
           message: "Post unliked",
@@ -270,7 +327,7 @@ router.post(
 
       post.likes.push(userId!);
       await post.save();
-      await invalidatePostsCache();
+      invalidatePostsCache().catch(() => {});
 
       res.status(200).json({
         success: true,
@@ -319,7 +376,7 @@ router.post(
       } as any);
 
       await post.save();
-      await invalidatePostsCache();
+      invalidatePostsCache().catch(() => {});
 
       res.status(201).json({
         success: true,
@@ -377,7 +434,7 @@ router.post(
       });
 
       await post.save();
-      await invalidatePostsCache();
+      invalidatePostsCache().catch(() => {});
 
       const replies = (comment as any).replies;
       res.status(201).json({
@@ -424,7 +481,7 @@ router.delete(
 
       await Post.findByIdAndDelete(postId);
 
-      await invalidatePostsCache();
+      invalidatePostsCache().catch(() => {});
 
       res.status(200).json({ success: true, message: "Post deleted" });
     } catch (error) {
