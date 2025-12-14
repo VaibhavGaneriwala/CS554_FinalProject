@@ -48,6 +48,7 @@ export interface Workout {
   title: string;
   split: string;
   exercises: Exercise[];
+  media?: string[];
   date: string;
   duration?: number;
   notes?: string;
@@ -59,10 +60,12 @@ export interface WorkoutFormData {
   title: string;
   split: string;
   exercises: Exercise[];
+  media?: File[];
   date?: string;
   duration?: number;
   notes?: string;
 }
+
 
 export interface NutritionInfo {
   calories: number;

@@ -30,7 +30,6 @@ const Meals: React.FC = () => {
             <div className="p-5 max-w-4xl mx-auto">
                 <h2 className="text-2xl font-semibold mb-4">🍽️ Meals</h2>
 
-                {/* Add Meal Button */}
                 {!showForm && (
                     <button
                         onClick={() => setShowForm(true)}
@@ -40,7 +39,6 @@ const Meals: React.FC = () => {
                     </button>
                 )}
 
-                {/* Meal Form */}
                 {showForm && (
                     <div className="mb-8 p-5 bg-white border border-gray-300 rounded-lg">
                         <h3 className="text-xl font-semibold mb-3">Add a New Meal</h3>
@@ -54,7 +52,6 @@ const Meals: React.FC = () => {
                     </div>
                 )}
 
-                {/* Meal List */}
                 <div className="p-5 bg-white border border-gray-300 rounded-lg">
                     <h3 className="text-xl font-semibold mb-3">Your Meals</h3>
                     <MealList key={mealsUpdated.toString()} /> {/* re-render on update */}

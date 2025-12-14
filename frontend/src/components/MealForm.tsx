@@ -68,7 +68,7 @@ const MealForm: React.FC<MealFormProps> = ({ onMealCreated }) => {
         setProtein(food.perServing.protein);
         setCarbs(food.perServing.carbs);
         setFat(food.perServing.fat);
-        setFoodResults([]); // hide dropdown
+        setFoodResults([]);
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
