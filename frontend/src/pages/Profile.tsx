@@ -406,6 +406,11 @@ const handleUploadProfilePicture = async () => {
                   max="150"
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
+                {formData.age === '' && (
+                  <p className="mt-1 text-xs text-gray-500">
+                    {user.age ? 'Leaving this blank will keep your current age unchanged.' : 'Leaving this blank will keep your age unset.'}
+                  </p>
+                )}
               </div>
 
               <div>
@@ -440,6 +445,13 @@ const handleUploadProfilePicture = async () => {
                     />
                   </div>
                 </div>
+                {(formData.heightFeet === '' || formData.heightInches === '') && (
+                  <p className="mt-1 text-xs text-gray-500">
+                    {user.height
+                      ? 'Enter both feet and inches to update. Leaving this blank will keep your current height unchanged.'
+                      : 'Enter both feet and inches to set your height. Leaving this blank will keep your height unset.'}
+                  </p>
+                )}
               </div>
 
               <div>
@@ -456,6 +468,11 @@ const handleUploadProfilePicture = async () => {
                   step="0.1"
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
+                {formData.weight === '' && (
+                  <p className="mt-1 text-xs text-gray-500">
+                    {user.weight ? 'Leaving this blank will keep your current weight unchanged.' : 'Leaving this blank will keep your weight unset.'}
+                  </p>
+                )}
               </div>
             </div>
 
