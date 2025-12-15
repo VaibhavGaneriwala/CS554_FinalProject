@@ -1,4 +1,3 @@
-// src/components/FoodSearch.tsx
 import React, { useState, useEffect } from "react";
 import { FoodItem } from "../types";
 import { mealService } from "../services/mealService";
