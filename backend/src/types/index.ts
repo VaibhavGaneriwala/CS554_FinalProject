@@ -29,6 +29,7 @@ export interface IWorkout extends Document {
   title: string;
   split: string;
   exercises: IExercise[];
+  media?: string[];
   date: Date;
   duration?: number;
   notes?: string;

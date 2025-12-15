@@ -49,7 +49,7 @@ router.post('/', authenticate, upload.array('photos', 5), mealValidation, handle
             }
         }
         const meal = await Meal.create({ userId, name, description, nutrition: nutritionData, mealType, photos: photoUrls, date: date || new Date() });
-        await cacheUtils.del(`meals:user:${userId}`);
+        await cacheUtils.delPattern(`meals:user:${userId}:*`);
         res.status(201).json({ success: true, message: 'Meal created successfully', data: meal });
     } catch (error) {
         res.status(500).json({ success: false, message: 'Error creating meal', error: error instanceof Error ? error.message : 'Unknown error' });
@@ -77,7 +77,7 @@ router.get('/', authenticate, async (req: Request, res: Response): Promise<void>
             if (startDate) query.date.$gte = new Date(startDate as string);
             if (endDate) query.date.$lte = new Date(endDate as string);
         }
-        const cacheKey = `meals:${JSON.stringify(query)}:page:${pageNum}`;
+        const cacheKey = `meals:user:${query.userId}:type:${query.mealType || "all"}:start:${startDate || "none"}:end:${endDate || "none"}:page:${pageNum}:limit:${limitNum}`;
         const cachedData = await cacheUtils.get(cacheKey);
         if (cachedData) {
             res.status(200).json({ success: true, data: cachedData, cached: true });
@@ -127,7 +127,7 @@ router.put('/:mealId', authenticate, param('mealId').custom((value) => {
             return;
         }
         const updatedMeal = await Meal.findByIdAndUpdate(mealId, req.body, { new: true, runValidators: true });
-        await cacheUtils.del(`meals:user:${userId}`);
+        await cacheUtils.delPattern(`meals:user:${userId}:*`);
         res.status(200).json({ success: true, message: 'Meal updated successfully', data: updatedMeal });
     } catch (error) {
         res.status(500).json({ success: false, message: 'Error updating meal', error: error instanceof Error ? error.message : 'Unknown error' });
@@ -157,7 +157,7 @@ router.delete('/:mealId', authenticate, param('mealId').custom((value) => {
             }
         }
         await Meal.findByIdAndDelete(mealId);
-        await cacheUtils.del(`meals:user:${userId}`);
+        await cacheUtils.delPattern(`meals:user:${userId}:*`);
         res.status(200).json({ success: true, message: 'Meal deleted successfully' });
     }
     catch (error) {
