@@ -4,9 +4,11 @@ import { Meal } from "../types";
 
 interface MealListProps {
     onCreateMeal?: () => void;
+    onEditMeal?: (meal: Meal) => void;
+    onDeleteMeal?: (mealId: string) => void;
 }
 
-const MealList: React.FC<MealListProps> = ({ onCreateMeal }) => {
+const MealList: React.FC<MealListProps> = ({ onCreateMeal, onEditMeal, onDeleteMeal }) => {
     const [meals, setMeals] = useState<Meal[]>([]);
     const [mealType, setMealType] = useState("");
     const [startDate, setStartDate] = useState("");
@@ -102,6 +104,7 @@ const MealList: React.FC<MealListProps> = ({ onCreateMeal }) => {
                             <div className="flex justify-between items-start mb-4">
                                 <div>
                                     <h3 className="text-xl font-semibold mb-1">{meal.name}</h3>
+
                                     <div className="flex flex-wrap gap-3 text-sm text-gray-600">
                                         <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded capitalize">
                                             {meal.mealType}
@@ -111,6 +114,20 @@ const MealList: React.FC<MealListProps> = ({ onCreateMeal }) => {
                                             <span className="font-semibold">{meal.nutrition.calories}</span> cal
                                         </span>
                                     </div>
+                                </div>
+                                <div className="flex gap-2 mt-2">
+                                    <button
+                                        onClick={() => onEditMeal?.(meal)}
+                                        className="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded text-sm"
+                                    >
+                                        Edit
+                                    </button>
+                                    <button
+                                        onClick={() => onDeleteMeal?.(meal._id)}
+                                        className="px-3 py-1 bg-red-600 hover:bg-red-700 text-white rounded text-sm"
+                                    >
+                                        Delete
+                                    </button>
                                 </div>
                             </div>
 

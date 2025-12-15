@@ -1,27 +1,14 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { mealService } from "../services/mealService";
-import { MealFormData } from "../types";
+import { FoodItem, Meal, MealFormData } from "../types";
 import axios from "axios";
 
 interface MealFormProps {
     onMealCreated: () => void;
+    mealToEdit?: Meal | null;
 };
 
-interface FoodItem {
-    name: string;
-    image: string;
-    perServing: {
-        calories: number;
-        protein: number;
-        carbs: number;
-        fat: number;
-        fiber: number;
-        sugar: number;
-    };
-    servings: number;
-};
-
-const MealForm: React.FC<MealFormProps> = ({ onMealCreated }) => {
+const MealForm: React.FC<MealFormProps> = ({ onMealCreated, mealToEdit }) => {
     const [name, setName] = useState("");
     const [mealType, setMealType] = useState<MealFormData["mealType"]>("breakfast");
     //const [description, setDescription] = useState("");
@@ -37,6 +24,19 @@ const MealForm: React.FC<MealFormProps> = ({ onMealCreated }) => {
     const [foodQuery, setFoodQuery] = useState("");
     const [foodResults, setFoodResults] = useState<FoodItem[]>([]);
     const [searchLoading, setSearchLoading] = useState(false);
+
+    useEffect(() => {
+        if (mealToEdit) {
+            setName(mealToEdit.name);
+            setMealType(mealToEdit.mealType);
+            setCalories(mealToEdit.nutrition.calories);
+            setProtein(mealToEdit.nutrition.protein);
+            setCarbs(mealToEdit.nutrition.carbs);
+            setFat(mealToEdit.nutrition.fat);
+            // optionally photos
+        }
+    }, [mealToEdit]);
+
 
     const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (!e.target.files) return;
@@ -60,14 +60,18 @@ const MealForm: React.FC<MealFormProps> = ({ onMealCreated }) => {
         } finally {
             setSearchLoading(false);
         }
-    }; const handleSelectFood = (food: FoodItem) => {
+    };
+
+    const handleSelectFood = (food: FoodItem) => {
         setName(food.name);
         setCalories(food.perServing.calories);
         setProtein(food.perServing.protein);
         setCarbs(food.perServing.carbs);
         setFat(food.perServing.fat);
         setFoodResults([]);
-    }; const handleSubmit = async (e: React.FormEvent) => {
+    };
+
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
         setError(null); try {
@@ -81,7 +85,13 @@ const MealForm: React.FC<MealFormProps> = ({ onMealCreated }) => {
                     fat: Number(fat),
                 },
                 photos: photos || undefined,
-            }; await mealService.createMeal(data);
+            };
+
+            if (mealToEdit) {
+                await mealService.updateMeal(mealToEdit._id, data);
+            } else {
+                await mealService.createMeal(data);
+            }
             console.log("Submitting:", data); setName("");
             setMealType("breakfast");
             setCalories(0);
@@ -99,7 +109,9 @@ const MealForm: React.FC<MealFormProps> = ({ onMealCreated }) => {
         } finally {
             setLoading(false);
         }
-    }; return (
+    };
+
+    return (
         <form onSubmit={handleSubmit} className="space-y-4">
             {error && (
                 <div className="p-4 bg-red-50 border-l-4 border-red-500 rounded-lg">
@@ -238,7 +250,7 @@ const MealForm: React.FC<MealFormProps> = ({ onMealCreated }) => {
                 className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded transition-colors font-medium disabled:opacity-50"
                 disabled={loading}
             >
-                {loading ? "Saving..." : "Log Meal"}
+                {loading ? "Saving..." : mealToEdit ? "Update Meal" : "Log Meal"}
             </button>
         </form>
     );
