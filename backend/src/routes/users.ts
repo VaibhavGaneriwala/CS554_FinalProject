@@ -87,7 +87,6 @@ router.put(
         body('height').optional().isFloat({min: 24, max: 96}).withMessage('Height must be between 2 and 8 feet'),
         body('weight').optional().isFloat({min: 20, max: 500}).withMessage('Weight must be between 20 and 500kg'),
         body('profilePicture').optional().isURL().withMessage('Invalid profile picture URL'),
-        body('goalWeight').optional().isFloat({min: 20, max: 500}).withMessage('Goal weight must be between 20 and 500kg'),
     ], handleValidationErrors, async (req: Request, res: Response): Promise<void> => {
         try {
             const {firstName, lastName, age, height, weight} = req.body;
@@ -162,31 +161,6 @@ router.post(
         message: 'Error updating profile picture',
         error: error instanceof Error ? error.message : 'Unknown error',
       });
-    }
-  }
-);
-
-router.put('/goal-weight',
-  authenticate,
-  [
-    body('goalWeight').isFloat({ min: 20, max: 500 }).withMessage('Goal weight must be between 20 and 500'),
-  ], handleValidationErrors, async (req: Request, res: Response): Promise<void> => {
-    try {
-      const userId = req.user?.userId;
-      const { goalWeight } = req.body;
-
-      const user = await User.findByIdAndUpdate(userId, {goalWeight}, {new: true, runValidators: true}).select('goalWeight');
-
-      if (!user) {
-        res.status(404).json({ success: false, message: 'User not found' });
-        return;
-      }
-
-      await cacheUtils.del(`user:${userId}`);
-
-      res.status(200).json({success: true, message: 'Goal weight updated', data: user});
-    } catch (error) {
-      res.status(500).json({success: false, message: 'Error updating goal weight', error: error instanceof Error ? error.message : 'Unknown error'});
     }
   }
 );

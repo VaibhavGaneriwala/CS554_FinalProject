@@ -7,8 +7,11 @@ import Dashboard from './pages/Dashboard';
 import Profile from './pages/Profile';
 import Workouts from './pages/Workouts';
 import Meals from './pages/Meals';
+<<<<<<< HEAD
 import Progress from './pages/Progress';
 import Feed from './pages/Feed';
+=======
+>>>>>>> parent of 62779cd (Added very basic progress tracking for weights and prs)
 import './App.css';
 
 const ProtectedRoute: React.FC<{children: React.ReactElement}> = ({children}) => {

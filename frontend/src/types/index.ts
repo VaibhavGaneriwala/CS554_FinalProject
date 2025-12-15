@@ -6,7 +6,6 @@ export interface User {
   age?: number;
   height?: number;
   weight?: number;
-  goalWeight?: number;
   profilePicture?: string;
   createdAt?: string;
 }

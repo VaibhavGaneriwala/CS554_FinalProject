@@ -9,7 +9,6 @@ export interface IUser extends Document {
   age?: number;
   height?: number;
   weight?: number;
-  goalWeight?: number;
   profilePicture?: string;
   createdAt: Date;
   updatedAt: Date;
