@@ -22,4 +22,8 @@ export const userService = {
         const response = await api.post<ApiResponse<User>>('/users/profile-picture', formData);
         return response.data;
     },
+    updateWeightGoal: async (goalWeight: number): Promise<ApiResponse<User>> => {
+        const response = await api.put<ApiResponse<User>>('/users/goal-weight', {goalWeight});
+        return response.data;
+    }
 };
