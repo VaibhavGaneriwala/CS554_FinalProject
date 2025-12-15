@@ -1,33 +1,105 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import Navbar from '../components/Navbar';
 
 import MealForm from "../components/MealForm";
 import MealList from "../components/MealList";
+import { Meal, MealFormData } from "../types";
+import { mealService } from "../services/mealService";
 
 const Meals: React.FC = () => {
     const { logout } = useAuth();
     const navigate = useNavigate();
+    const [meals, setMeals] = useState<Meal[]>([]);
     const [showForm, setShowForm] = useState(false);
     const [mealsUpdated, setMealsUpdated] = useState(false);
+    const [editingMeal, setEditingMeal] = useState<Meal | null>(null);
+    const [formData, setFormData] = useState<MealFormData | null>(null);
+    const [error, setError] = useState<string | null>(null);
+
+    const loadMeals = async () => {
+        const res = await mealService.getMeals();
+        setMeals(res.data?.meals || []);
+    };
+
+    useEffect(() => {
+        loadMeals();
+    }, []);
 
     const handleLogout = () => {
         logout();
         navigate('/login');
     };
 
-    //const [mealsUpdated, setMealsUpdated] = useState(false);
     const handleMealCreated = () => {
-        setMealsUpdated(prev => !prev); 
-        setShowForm(false); 
+        setMealsUpdated(prev => !prev);
+        setShowForm(false);
+        setEditingMeal(null);
     };
+
+    const handleEdit = (meal: Meal) => {
+        setEditingMeal(meal);
+        setFormData({
+            name: meal.name,
+            mealType: meal.mealType,
+            nutrition: meal.nutrition,
+            date: meal.date.split("T")[0],
+            photos: [],
+        });
+        setShowForm(true);
+    };
+
+    const today = new Date().toDateString();
+
+    const todayMeals = meals.filter(meal =>
+        new Date(meal.date).toDateString() === today
+    );
+
+    const totals = todayMeals.reduce(
+        (acc, meal) => ({
+            calories: acc.calories + (meal.nutrition?.calories || 0),
+            protein: acc.protein + (meal.nutrition?.protein || 0),
+            carbs: acc.carbs + (meal.nutrition?.carbs || 0),
+            fat: acc.fat + (meal.nutrition?.fat || 0),
+        }),
+        { calories: 0, protein: 0, carbs: 0, fat: 0 }
+
+    );
+    console.log(meals);
 
     return (
         <>
             <Navbar isAuthenticated={true} onLogout={handleLogout} />
 
             <div className="p-5 max-w-7xl mx-auto">
+                <div className="flex justify-between items-center mb-8">
+                    <div>
+                        <h1 className="text-3xl font-bold">Daily Summary</h1>
+                    </div>
+                </div>
+                <div className="mb-6 grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div className="bg-blue-50 p-4 rounded">
+                        <p className="text-sm text-gray-600">Calories</p>
+                        <p className="text-2xl font-bold">{totals.calories}</p>
+                    </div>
+
+                    <div className="bg-green-50 p-4 rounded">
+                        <p className="text-sm text-gray-600">Protein</p>
+                        <p className="text-2xl font-bold">{totals.protein}g</p>
+                    </div>
+
+                    <div className="bg-yellow-50 p-4 rounded">
+                        <p className="text-sm text-gray-600">Carbs</p>
+                        <p className="text-2xl font-bold">{totals.carbs}g</p>
+                    </div>
+
+                    <div className="bg-red-50 p-4 rounded">
+                        <p className="text-sm text-gray-600">Fat</p>
+                        <p className="text-2xl font-bold">{totals.fat}g</p>
+                    </div>
+                </div>
+
                 <div className="flex justify-between items-center mb-8">
                     <div>
                         <h1 className="text-3xl font-bold">Meals</h1>
@@ -42,12 +114,17 @@ const Meals: React.FC = () => {
 
                 {showForm && (
                     <div className="mb-8 p-6 bg-white border border-gray-300 rounded-lg shadow-sm">
-                        <h2 className="text-2xl font-semibold mb-4">Add a New Meal</h2>
-                        <MealForm onMealCreated={handleMealCreated} />
+                        <h2 className="text-2xl font-semibold mb-4">
+                            {editingMeal ? "Edit Meal" : "Add a New Meal"}
+                        </h2>
+                        <MealForm
+                            onMealCreated={handleMealCreated}
+                            mealToEdit={editingMeal}
+                        />
                         <div className="flex gap-3 mt-4">
                             <button
                                 type="button"
-                                onClick={() => setShowForm(false)}
+                                onClick={() => { setShowForm(false); setEditingMeal(null); }}
                                 className="px-6 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded transition-colors font-medium"
                             >
                                 Cancel
@@ -57,9 +134,20 @@ const Meals: React.FC = () => {
                 )}
 
                 <MealList
-                    key={mealsUpdated.toString()} 
+                    key={mealsUpdated.toString()}
                     onCreateMeal={() => setShowForm(true)}
+                    onEditMeal={handleEdit}
+                    onDeleteMeal={async (mealId) => {
+                        if (!window.confirm("Are you sure you want to delete this meal?")) return;
+                        try {
+                            await mealService.deleteMeal(mealId);
+                            setMealsUpdated(prev => !prev);
+                        } catch (err: any) {
+                            alert(err.message || "Failed to delete meal");
+                        }
+                    }}
                 />
+
             </div>
         </>
     );
