@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { mealService } from "../services/mealService";
 import { FoodItem, Meal, MealFormData } from "../types";
-import axios from "axios";
 
 interface MealFormProps {
     onMealCreated: () => void;
@@ -11,7 +10,6 @@ interface MealFormProps {
 const MealForm: React.FC<MealFormProps> = ({ onMealCreated, mealToEdit }) => {
     const [name, setName] = useState("");
     const [mealType, setMealType] = useState<MealFormData["mealType"]>("breakfast");
-    //const [description, setDescription] = useState("");
     const [calories, setCalories] = useState(0);
     const [protein, setProtein] = useState(0);
     const [carbs, setCarbs] = useState(0);
@@ -33,7 +31,6 @@ const MealForm: React.FC<MealFormProps> = ({ onMealCreated, mealToEdit }) => {
             setProtein(mealToEdit.nutrition.protein);
             setCarbs(mealToEdit.nutrition.carbs);
             setFat(mealToEdit.nutrition.fat);
-            // optionally photos
         }
     }, [mealToEdit]);
 

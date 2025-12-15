@@ -63,7 +63,6 @@ const normalizeWorkoutBody = (req: Request, _res: Response, next: NextFunction) 
       req.body.duration = req.body.duration ? Number(req.body.duration) : undefined;
     }
 
-    // keep as ISO/date string for validation; convert to Date when saving
     next();
   } catch (e) {
     next(e);
