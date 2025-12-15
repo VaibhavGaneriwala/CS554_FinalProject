@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import { mealService } from "../services/mealService";
 import { MealFormData } from "../types";
-import axios from "axios";
 
 interface MealFormProps {
     onMealCreated: () => void;
@@ -49,14 +48,23 @@ const MealForm: React.FC<MealFormProps> = ({ onMealCreated }) => {
     const handleFoodSearch = async () => {
         if (!foodQuery.trim()) return;
         setSearchLoading(true);
+        setError(null);
         try {
-            const token = localStorage.getItem("authToken");
-            const res = await axios.get(`/api/meals/search-food?q=${encodeURIComponent(foodQuery)}`, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
-            setFoodResults(res.data.data || []);
-        } catch (err) {
+            const res = await mealService.searchFood(foodQuery);
+            if (res.success) {
+                setFoodResults(res.data || []);
+            } else {
+                setFoodResults([]);
+                setError(res.message || "Food search failed");
+            }
+        } catch (err: any) {
             console.error(err);
+            const msg =
+                err?.response?.data?.error ||
+                err?.response?.data?.message ||
+                err?.message ||
+                "Food search failed";
+            setError(msg);
         } finally {
             setSearchLoading(false);
         }
@@ -177,6 +185,7 @@ const MealForm: React.FC<MealFormProps> = ({ onMealCreated }) => {
                     onChange={(e) => setCalories(Number(e.target.value))}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     min="0"
+                    step="any"
                 />
             </div>
             <div>
@@ -188,6 +197,7 @@ const MealForm: React.FC<MealFormProps> = ({ onMealCreated }) => {
                     onChange={(e) => setProtein(Number(e.target.value))}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     min="0"
+                    step="any"
                 />
             </div>
             <div>
@@ -199,6 +209,7 @@ const MealForm: React.FC<MealFormProps> = ({ onMealCreated }) => {
                     onChange={(e) => setCarbs(Number(e.target.value))}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     min="0"
+                    step="any"
                 />
             </div>
             <div>
@@ -210,6 +221,7 @@ const MealForm: React.FC<MealFormProps> = ({ onMealCreated }) => {
                     onChange={(e) => setFat(Number(e.target.value))}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     min="0"
+                    step="any"
                 />
             </div>
             <div>

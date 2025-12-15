@@ -61,6 +61,8 @@ services:
       MINIO_USE_SSL: "false"
       JWT_SECRET: a266d1f9d21742880b3bdc9372f81b5d
       JWT_EXPIRES_IN: 7d
+      EDAMAM_APP_ID: ${EDAMAM_APP_ID:-}
+      EDAMAM_APP_KEY: ${EDAMAM_APP_KEY:-}
       CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:3001}
     depends_on:
       - mongodb

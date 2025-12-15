@@ -93,6 +93,47 @@ router.get('/', authenticate, async (req: Request, res: Response): Promise<void>
     }
 });
 
+router.get("/search-food", authenticate, async (req: Request, res: Response): Promise<void> => {
+    try {
+        const q = (req.query.q as string) || "";
+        if (!q.trim()) {
+            res.status(400).json({ success: false, message: "Missing query ?q=" });
+            return;
+        }
+
+        const cacheKey = `edamam:search:${q.toLowerCase().trim()}`;
+        const cached = await cacheUtils.get(cacheKey);
+        if (cached) {
+            res.status(200).json({ success: true, data: cached, cached: true });
+            return;
+        }
+
+        const accountUser = req.user?.userId || req.user?.email || "anonymous";
+        const results = await getNutritionInfoEdamam(q, accountUser);
+        await cacheUtils.set(cacheKey, results, 3600);
+        res.status(200).json({ success: true, data: results });
+    } catch (err) {
+        const e = err as any;
+        const status =
+            typeof e?.status === "number" ? e.status :
+            (typeof e?.message === "string" && e.message.includes("Missing Edamam API keys")) ? 500 :
+            500;
+
+        console.error("search-food error:", {
+            status,
+            message: e?.message,
+            details: e?.details
+        });
+
+        res.status(status).json({
+            success: false,
+            message: "Error searching food",
+            error: e instanceof Error ? e.message : e,
+            ...(process.env.NODE_ENV === "development" && e?.details ? { details: e.details } : {})
+        });
+    }
+});
+
 router.get('/:mealId', authenticate, param('mealId').custom((value) => {
     if (!isValidObjectId(value)) throw new Error('Invalid meal ID');
     return true;
@@ -162,34 +203,6 @@ router.delete('/:mealId', authenticate, param('mealId').custom((value) => {
     }
     catch (error) {
         res.status(500).json({ success: false, message: 'Error deleting meal', error: error instanceof Error ? error.message : 'Unknown error' });
-    }
-});
-
-router.get("/search-food", authenticate, async (req: Request, res: Response): Promise<void> => {
-    try {
-        const q = (req.query.q as string) || "";
-        if (!q.trim()) {
-            res.status(400).json({ success: false, message: "Missing query ?q=" });
-            return;
-        }
-
-        const cacheKey = `edamam:search:${q.toLowerCase().trim()}`;
-        const cached = await cacheUtils.get(cacheKey);
-        if (cached) {
-            res.status(200).json({ success: true, data: cached, cached: true });
-            return;
-        }
-
-        const results = await getNutritionInfoEdamam(q);
-        await cacheUtils.set(cacheKey, results, 3600);
-        res.status(200).json({ success: true, data: results });
-    } catch (err) {
-        console.error("search-food error:", err);
-        res.status(500).json({
-            success: false,
-            message: "Error searching food",
-            error: err instanceof Error ? err.message : err
-        });
     }
 });
 
