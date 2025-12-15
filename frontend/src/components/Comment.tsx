@@ -80,11 +80,9 @@ const Comment: React.FC<CommentProps> = ({
           <div key={c._id} className="text-xs text-gray-700">
             <div className="flex items-center justify-between">
               <span className="font-semibold">
-                {(c as any).user?.firstName
-                  ? `${(c as any).user.firstName} ${
-                      (c as any).user.lastName || ""
-                    }`.trim()
-                  : `User ${c.userId}`}
+                {c.user?.firstName
+                  ? `${c.user.firstName} ${c.user.lastName || ""}`.trim()
+                  : c.userId}
               </span>
 
               {onReply && (

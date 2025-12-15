@@ -1,4 +1,4 @@
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, NavLink, useNavigate } from 'react-router-dom';
 import { useState } from 'react';
 
 interface NavbarProps {
@@ -9,6 +9,16 @@ interface NavbarProps {
 const Navbar = ({ isAuthenticated, onLogout }: NavbarProps) => {
   const navigate = useNavigate();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  const navLinkClassName = ({ isActive }: { isActive: boolean }) =>
+    `text-gray-200 hover:text-white transition-colors font-medium ${
+      isActive ? 'text-white underline underline-offset-8' : ''
+    }`;
+
+  const mobileNavLinkClassName = ({ isActive }: { isActive: boolean }) =>
+    `block px-3 py-2 rounded-md text-base font-medium ${
+      isActive ? 'text-white bg-gray-800' : 'text-gray-200 hover:text-white hover:bg-gray-800'
+    }`;
 
   const handleLogout = () => {
     onLogout();
@@ -36,42 +46,24 @@ const Navbar = ({ isAuthenticated, onLogout }: NavbarProps) => {
             <div className="flex-1 flex justify-center items-center space-x-8">
               {isAuthenticated && (
                 <>
-                  <Link
-                    to="/dashboard"
-                    className="text-gray-200 hover:text-white transition-colors font-medium"
-                  >
+                  <NavLink to="/dashboard" className={navLinkClassName}>
                     Dashboard
-                  </Link>
-                  <Link
-                    to="/workouts"
-                    className="text-gray-200 hover:text-white transition-colors font-medium"
-                  >
+                  </NavLink>
+                  <NavLink to="/workouts" className={navLinkClassName}>
                     Workouts
-                  </Link>
-                  <Link
-                    to="/meals"
-                    className="text-gray-200 hover:text-white transition-colors font-medium"
-                  >
+                  </NavLink>
+                  <NavLink to="/meals" className={navLinkClassName}>
                     Meals
-                  </Link>
-                  <Link
-                    to="/progress"
-                    className="text-gray-200 hover:text-white transition-colors font-medium"
-                  >
+                  </NavLink>
+                  <NavLink to="/progress" className={navLinkClassName}>
                     Progress
-                  </Link>
-                  <Link
-                    to="/feed"
-                    className="text-gray-200 hover:text-white transition-colors font-medium"
-                  >
+                  </NavLink>
+                  <NavLink to="/feed" className={navLinkClassName}>
                     Feed
-                  </Link>
-                  <Link
-                    to="/profile"
-                    className="text-gray-200 hover:text-white transition-colors font-medium"
-                  >
+                  </NavLink>
+                  <NavLink to="/profile" className={navLinkClassName}>
                     Profile
-                  </Link>
+                  </NavLink>
                 </>
               )}
             </div>
@@ -130,48 +122,48 @@ const Navbar = ({ isAuthenticated, onLogout }: NavbarProps) => {
           <div className="px-2 pt-2 pb-3 space-y-1">
             {isAuthenticated ? (
               <>
-                <Link
+                <NavLink
                   to="/dashboard"
-                  className="block px-3 py-2 rounded-md text-base font-medium text-gray-200 hover:text-white hover:bg-gray-800"
+                  className={mobileNavLinkClassName}
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
                   Dashboard
-                </Link>
-                <Link
+                </NavLink>
+                <NavLink
                   to="/workouts"
-                  className="block px-3 py-2 rounded-md text-base font-medium text-gray-200 hover:text-white hover:bg-gray-800"
+                  className={mobileNavLinkClassName}
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
                   Workouts
-                </Link>
-                <Link
+                </NavLink>
+                <NavLink
                   to="/meals"
-                  className="block px-3 py-2 rounded-md text-base font-medium text-gray-200 hover:text-white hover:bg-gray-800"
+                  className={mobileNavLinkClassName}
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
                   Meals
-                </Link>
-                <Link
+                </NavLink>
+                <NavLink
                   to="/progress"
-                  className="block px-3 py-2 rounded-md text-base font-medium text-gray-200 hover:text-white hover:bg-gray-800"
+                  className={mobileNavLinkClassName}
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
                   Progress
-                </Link>
-                <Link
+                </NavLink>
+                <NavLink
                   to="/feed"
-                  className="block px-3 py-2 rounded-md text-base font-medium text-gray-200 hover:text-white hover:bg-gray-800"
+                  className={mobileNavLinkClassName}
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
                   Feed
-                </Link>
-                <Link
+                </NavLink>
+                <NavLink
                   to="/profile"
-                  className="block px-3 py-2 rounded-md text-base font-medium text-gray-200 hover:text-white hover:bg-gray-800"
+                  className={mobileNavLinkClassName}
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
                   Profile
-                </Link>
+                </NavLink>
                 <div className="px-3 py-2 border-t border-gray-700 mt-2">
                   <button
                     onClick={() => {
