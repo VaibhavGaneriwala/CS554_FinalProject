@@ -6,16 +6,36 @@ import { handleValidationErrors, isValidObjectId } from "../utils/validation";
 import { cacheUtils } from "../config/redis";
 import multer from "multer";
 import { minioUtils } from "../config/minio";
+import fs from "fs";
+import os from "os";
+import path from "path";
 
 const router = express.Router();
 
+const uploadDir = path.join(os.tmpdir(), "workout-media");
+fs.mkdirSync(uploadDir, { recursive: true });
+
 const upload = multer({
-  storage: multer.memoryStorage(),
-  limits: { fileSize: 50 * 1024 * 1024 },
+  storage: multer.diskStorage({
+    destination: (_req, _file, cb) => cb(null, uploadDir),
+    filename: (_req, file, cb) => {
+      const safeBase = path.basename(file.originalname).replace(/[^\w.-]/g, "_");
+      cb(null, `${Date.now()}-${safeBase}`);
+    },
+  }),
+  limits: { fileSize: 150 * 1024 * 1024 },
   fileFilter: (_req, file, cb) => {
-    const allowed = ["image/jpeg", "image/png", "video/mp4", "video/webm"];
+    const allowed = [
+      "image/jpeg",
+      "image/jpg",
+      "image/png",
+      "image/webp",
+      "video/mp4",
+      "video/webm",
+      "video/quicktime",
+    ];
     if (allowed.includes(file.mimetype)) cb(null, true);
-    else cb(new Error("Invalid file type. Only JPG/PNG images and MP4/WebM videos are allowed."));
+    else cb(new Error("Invalid file type. Only JPG/PNG/WebP images and MP4/WebM/MOV videos are allowed."));
   },
 });
 
@@ -133,9 +153,12 @@ router.post(
       if (files && files.length > 0) {
         for (const file of files) {
           const fileName = minioUtils.generatefileName(file.originalname, userId);
-          await minioUtils.uploadFile(fileName, file.buffer, file.mimetype);
+          const stream = fs.createReadStream(file.path);
+          await minioUtils.uploadStream(fileName, stream, file.size, file.mimetype);
           const fileUrl = await minioUtils.getFileUrl(fileName);
           mediaUrls.push(fileUrl);
+
+          fs.unlink(file.path, () => {});
         }
       }
 

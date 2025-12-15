@@ -1,5 +1,6 @@
 import { Client } from "minio";
 import dotenv from "dotenv";
+import type { Readable } from "stream";
 
 dotenv.config();
 
@@ -23,8 +24,8 @@ export const initMinIO = async () => {
   }
 };
 
-const PUBLIC_MINIO_BASE_URL =
-  process.env.MINIO_PUBLIC_BASE_URL || "http://localhost:9000";
+const PUBLIC_BACKEND_BASE_URL =
+  process.env.PUBLIC_BACKEND_BASE_URL || process.env.BACKEND_PUBLIC_BASE_URL || "http://localhost:3000";
 
 export const minioUtils = {
   async uploadFile(
@@ -42,14 +43,20 @@ export const minioUtils = {
     return fileName;
   },
 
-  async getFileUrl(fileName: string): Promise<string> {
-    const presigned = await minioClient.presignedGetObject(
-      minioBucketName,
-      fileName,
-      24 * 60 * 60 * 7
-    );
+  async uploadStream(
+    fileName: string,
+    stream: Readable,
+    size: number,
+    contentType: string
+  ): Promise<string> {
+    await minioClient.putObject(minioBucketName, fileName, stream, size, {
+      "Content-Type": contentType,
+    });
+    return fileName;
+  },
 
-    return presigned.replace(/^https?:\/\/[^/]+/i, PUBLIC_MINIO_BASE_URL);
+  async getFileUrl(fileName: string): Promise<string> {
+    return `${PUBLIC_BACKEND_BASE_URL}/api/files/${encodeURIComponent(fileName)}`;
   },
 
   async deleteFile(fileName: string): Promise<void> {

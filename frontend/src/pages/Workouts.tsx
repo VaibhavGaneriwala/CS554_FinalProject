@@ -29,16 +29,20 @@ const Workouts: React.FC = () => {
     media: [],
   });
 
-  const ALLOWED_IMAGE_TYPES = useMemo(() => new Set(["image/jpeg", "image/png"]), []);
-  const ALLOWED_VIDEO_TYPES = useMemo(() => new Set(["video/mp4", "video/webm"]), []);
-  const ACCEPT_ATTR = "image/jpeg,image/png,video/mp4,video/webm";
+  const ALLOWED_IMAGE_TYPES = useMemo(() => new Set(["image/jpeg", "image/jpg", "image/png", "image/webp"]), []);
+  const ALLOWED_VIDEO_TYPES = useMemo(() => new Set(["video/mp4", "video/webm", "video/quicktime"]), []);
+  const ACCEPT_ATTR = "image/jpeg,image/jpg,image/png,image/webp,video/mp4,video/webm,video/quicktime";
+  const FILES_BASE = (process.env.REACT_APP_API_URL || "/api").replace(/\/$/, "") + "/files/";
 
   useEffect(() => {
     loadWorkouts();
+  }, []);
+
+  useEffect(() => {
     return () => {
       mediaPreviewUrls.forEach((u) => URL.revokeObjectURL(u));
     };
-  }, []);
+  }, [mediaPreviewUrls]);
 
   const loadWorkouts = async () => {
     try {
@@ -118,9 +122,20 @@ const Workouts: React.FC = () => {
     }
   };
 
-  const getVideoMimeFromExt = (ext: string): "video/mp4" | "video/webm" | null => {
+  const toFileProxyUrl = (url: string): string => {
+    if (url.includes("/api/files/") || url.includes("/files/")) return url;
+    const noQuery = url.split("?")[0];
+    const parts = noQuery.split("/");
+    const objectName = parts[parts.length - 1];
+    if (!objectName) return url;
+    return FILES_BASE + encodeURIComponent(objectName);
+  };
+
+  const getVideoMimeFromExt = (ext: string): string | null => {
     if (ext === "mp4") return "video/mp4";
     if (ext === "webm") return "video/webm";
+    if (ext === "mov") return "video/quicktime";
+    if (ext === "m4v") return "video/mp4";
     return null;
   };
 
@@ -133,7 +148,7 @@ const Workouts: React.FC = () => {
       (f) => !(ALLOWED_IMAGE_TYPES.has(f.type) || ALLOWED_VIDEO_TYPES.has(f.type))
     );
     if (invalid.length > 0) {
-      setError("Only JPG/PNG images and MP4/WebM videos are allowed.");
+      setError("Only JPG/PNG/WebP images and MP4/WebM/MOV videos are allowed.");
       e.target.value = "";
       return;
     }
@@ -381,7 +396,7 @@ const Workouts: React.FC = () => {
                         if (isVideo) {
                           return (
                             <video key={idx} controls className="w-full h-28 rounded border">
-                              <source src={src} type={f.type as "video/mp4" | "video/webm"} />
+                              <source src={src} type={f.type} />
                             </video>
                           );
                         }
@@ -567,11 +582,12 @@ const Workouts: React.FC = () => {
                         {workout.media.map((url, idx) => {
                           const ext = getExtFromUrl(url);
                           const videoMime = getVideoMimeFromExt(ext);
+                          const src = toFileProxyUrl(url);
 
                           if (videoMime) {
                             return (
                               <video key={idx} controls className="w-full h-28 rounded border">
-                                <source src={url} type={videoMime} />
+                                <source src={src} type={videoMime} />
                               </video>
                             );
                           }
@@ -579,7 +595,7 @@ const Workouts: React.FC = () => {
                           return (
                             <img
                               key={idx}
-                              src={url}
+                              src={src}
                               alt={`workout-media-${idx}`}
                               className="w-full h-28 object-cover rounded border"
                             />
