@@ -2,12 +2,24 @@ import React, { useState } from "react";
 import { mealService } from "../services/mealService";
 import { MealFormData } from "../types";
 import axios from "axios";
-import { FoodItem } from "../types";
 
 interface MealFormProps {
     onMealCreated: () => void;
-}
+};
 
+interface FoodItem {
+    name: string;
+    image: string;
+    perServing: {
+        calories: number;
+        protein: number;
+        carbs: number;
+        fat: number;
+        fiber: number;
+        sugar: number;
+    };
+    servings: number;
+};
 
 const MealForm: React.FC<MealFormProps> = ({ onMealCreated }) => {
     const [name, setName] = useState("");
@@ -34,7 +46,7 @@ const MealForm: React.FC<MealFormProps> = ({ onMealCreated }) => {
         setPreview(files.map((file) => URL.createObjectURL(file)));
     };
 
-    /*const handleFoodSearch = async () => {
+    const handleFoodSearch = async () => {
         if (!foodQuery.trim()) return;
         setSearchLoading(true);
         try {
@@ -48,23 +60,17 @@ const MealForm: React.FC<MealFormProps> = ({ onMealCreated }) => {
         } finally {
             setSearchLoading(false);
         }
-    };*/
-
-    const handleSelectFood = (food: FoodItem) => {
+    }; const handleSelectFood = (food: FoodItem) => {
         setName(food.name);
         setCalories(food.perServing.calories);
         setProtein(food.perServing.protein);
         setCarbs(food.perServing.carbs);
         setFat(food.perServing.fat);
-        setFoodResults([]); // hide dropdown
-    };
-
-    const handleSubmit = async (e: React.FormEvent) => {
+        setFoodResults([]);
+    }; const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
-        setError(null);
-
-        try {
+        setError(null); try {
             const data: MealFormData = {
                 name,
                 mealType,
@@ -75,13 +81,8 @@ const MealForm: React.FC<MealFormProps> = ({ onMealCreated }) => {
                     fat: Number(fat),
                 },
                 photos: photos || undefined,
-            };
-
-
-            await mealService.createMeal(data);
-            console.log("Submitting:", data);
-
-            setName("");
+            }; await mealService.createMeal(data);
+            console.log("Submitting:", data); setName("");
             setMealType("breakfast");
             setCalories(0);
             setProtein(0);
@@ -98,16 +99,14 @@ const MealForm: React.FC<MealFormProps> = ({ onMealCreated }) => {
         } finally {
             setLoading(false);
         }
-    };
-
-
-
-    return (
+    }; return (
         <form onSubmit={handleSubmit} className="space-y-4">
-            {error && <p className="text-red-500">{error}</p>}
+            {error && (
+                <div className="p-4 bg-red-50 border-l-4 border-red-500 rounded-lg">
+                    <p className="text-sm text-red-700">{error}</p>
+                </div>
+            )}
             <div>
-                {/* DISABLED FOOD SEARCH FOR NOW */}
-                {/*
                 <label className="block mb-1 font-medium">Search Food</label>
                 <div className="relative">
                     <input
@@ -115,37 +114,36 @@ const MealForm: React.FC<MealFormProps> = ({ onMealCreated }) => {
                         placeholder="Search food..."
                         value={foodQuery}
                         onChange={(e) => setFoodQuery(e.target.value)}
-                        className="w-full border border-gray-300 rounded px-3 py-2"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
                     <button
                         type="button"
                         onClick={handleFoodSearch}
-                        className="absolute right-2 top-2 px-3 py-1 bg-blue-500 text-white rounded"
+                        className="absolute right-2 top-1/2 -translate-y-1/2 px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded transition-colors text-sm font-medium"
                     >
                         {searchLoading ? "Searching..." : "Search"}
                     </button>
-                    
-                </div>
-                */}
-                {foodResults.length > 0 && (
-                    <ul className="border border-gray-300 rounded mt-1 max-h-60 overflow-y-auto bg-white absolute z-10 w-full">
-                        {foodResults.map((food, index) => (
-                            <li
-                                key={index}
-                                onClick={() => handleSelectFood(food)}
-                                className="flex items-center p-2 hover:bg-gray-100 cursor-pointer"
-                            >
-                                <img src={food.image} alt={food.name} className="h-10 w-10 object-cover rounded mr-2" />
-                                <div>
-                                    <div className="font-semibold">{food.name}</div>
-                                    <div className="text-sm text-gray-600">
-                                        {food.perServing.calories} kcal | {food.perServing.protein}g P | {food.perServing.carbs}g C | {food.perServing.fat}g F
+                    {foodResults.length > 0 && (
+                        <ul className="border border-gray-300 rounded mt-1 max-h-60 overflow-y-auto bg-white absolute z-10 w-full shadow">
+                            {foodResults.map((food, index) => (
+                                <li
+                                    key={index}
+                                    onClick={() => handleSelectFood(food)}
+                                    className="flex items-center p-2 hover:bg-gray-100 cursor-pointer"
+                                >
+                                    <img src={food.image} alt={food.name} className="h-10 w-10 object-cover rounded mr-2" />
+                                    <div>
+                                        <div className="font-semibold">{food.name}</div>
+                                        <div className="text-sm text-gray-600">
+                                            {food.perServing.calories} kcal | {food.perServing.protein}g P | {food.perServing.carbs}g C |{" "}
+                                            {food.perServing.fat}g F
+                                        </div>
                                     </div>
-                                </div>
-                            </li>
-                        ))}
-                    </ul>
-                )}
+                                </li>
+                            ))}
+                        </ul>
+                    )}
+                </div>
             </div>
             <div>
                 <label className="block mb-1 font-medium">Meal Name</label>
@@ -153,7 +151,7 @@ const MealForm: React.FC<MealFormProps> = ({ onMealCreated }) => {
                     type="text"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
-                    className="w-full border border-gray-300 rounded px-3 py-2"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     required
                 />
             </div>
@@ -162,7 +160,7 @@ const MealForm: React.FC<MealFormProps> = ({ onMealCreated }) => {
                 <select
                     value={mealType}
                     onChange={(e) => setMealType(e.target.value as 'breakfast' | 'lunch' | 'dinner' | 'snack')}
-                    className="w-full border border-gray-300 rounded px-3 py-2"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                     <option value="breakfast">Breakfast</option>
                     <option value="lunch">Lunch</option>
@@ -177,7 +175,7 @@ const MealForm: React.FC<MealFormProps> = ({ onMealCreated }) => {
                     placeholder="Calories"
                     value={calories}
                     onChange={(e) => setCalories(Number(e.target.value))}
-                    className="w-full border border-gray-300 rounded px-3 py-2"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     min="0"
                 />
             </div>
@@ -188,7 +186,7 @@ const MealForm: React.FC<MealFormProps> = ({ onMealCreated }) => {
                     placeholder="Protein"
                     value={protein}
                     onChange={(e) => setProtein(Number(e.target.value))}
-                    className="w-full border border-gray-300 rounded px-3 py-2"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     min="0"
                 />
             </div>
@@ -199,7 +197,7 @@ const MealForm: React.FC<MealFormProps> = ({ onMealCreated }) => {
                     placeholder="Carbs"
                     value={carbs}
                     onChange={(e) => setCarbs(Number(e.target.value))}
-                    className="w-full border border-gray-300 rounded px-3 py-2"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     min="0"
                 />
             </div>
@@ -210,7 +208,7 @@ const MealForm: React.FC<MealFormProps> = ({ onMealCreated }) => {
                     placeholder="Fat"
                     value={fat}
                     onChange={(e) => setFat(Number(e.target.value))}
-                    className="w-full border border-gray-300 rounded px-3 py-2"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     min="0"
                 />
             </div>
@@ -224,20 +222,20 @@ const MealForm: React.FC<MealFormProps> = ({ onMealCreated }) => {
                     className="w-full"
                 />
                 {preview.length > 0 && (
-                    <div className="mt-2 flex space-x-2">
+                    <div className="mt-3 grid grid-cols-2 md:grid-cols-4 gap-2">
                         {preview.map((src, index) => (
                             <img
                                 key={index}
                                 src={src}
                                 alt={`Preview ${index}`}
-                                className="h-20 w-20 object-cover rounded" />
+                                className="w-full h-28 object-cover rounded border" />
                         ))}
                     </div>
                 )}
             </div>
             <button
                 type="submit"
-                className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 disabled:opacity-50"
+                className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded transition-colors font-medium disabled:opacity-50"
                 disabled={loading}
             >
                 {loading ? "Saving..." : "Log Meal"}
