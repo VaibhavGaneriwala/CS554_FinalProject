@@ -2,7 +2,11 @@ import React, { useEffect, useState } from "react";
 import { mealService } from "../services/mealService";
 import { Meal } from "../types";
 
-const MealList: React.FC = () => {
+interface MealListProps {
+    refreshKey: number;
+}
+
+const MealList: React.FC<MealListProps> = ({ refreshKey }) => {
     const [meals, setMeals] = useState<Meal[]>([]);
     const [mealType, setMealType] = useState("");
     const [startDate, setStartDate] = useState("");
@@ -11,13 +15,25 @@ const MealList: React.FC = () => {
     const [error, setError] = useState<string | null>(null);
 
     const loadMeals = async () => {
-        const res = await mealService.getMeals();
-        setMeals(res.data?.meals || []);
+        try {
+            setLoading(true);
+            const res = await mealService.getMeals(
+                undefined,
+                mealType || undefined,
+                startDate || undefined,
+                endDate || undefined
+            );
+            setMeals(res.data?.meals || []);
+        } catch (err) {
+            setError("Failed to load meals");
+        } finally {
+            setLoading(false);
+        }
     };
 
     useEffect(() => {
         loadMeals();
-    }, [mealType, startDate, endDate]);
+    }, [mealType, startDate, endDate, refreshKey]);
 
     const filteredMeals = meals.filter(meal =>
         mealType ? meal.mealType === mealType : true

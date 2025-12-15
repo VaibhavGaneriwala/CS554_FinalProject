@@ -201,3 +201,17 @@ export interface PaginatedResponse<T> {
     pagination: Pagination;
   };
 }
+
+export interface FoodItem {
+  name: string;
+  image: string;
+  perServing: {
+    calories: number;
+    protein: number;
+    carbs: number;
+    fat: number;
+    fiber: number;
+    sugar: number;
+  };
+  servings: number;
+}

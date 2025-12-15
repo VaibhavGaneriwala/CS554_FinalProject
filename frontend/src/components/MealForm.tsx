@@ -2,24 +2,12 @@ import React, { useState } from "react";
 import { mealService } from "../services/mealService";
 import { MealFormData } from "../types";
 import axios from "axios";
+import { FoodItem } from "../types";
 
 interface MealFormProps {
     onMealCreated: () => void;
 }
 
-interface FoodItem {
-    name: string;
-    image: string;
-    perServing: {
-        calories: number;
-        protein: number;
-        carbs: number;
-        fat: number;
-        fiber: number;
-        sugar: number;
-    };
-    servings: number;
-}
 
 const MealForm: React.FC<MealFormProps> = ({ onMealCreated }) => {
     const [name, setName] = useState("");
@@ -46,7 +34,7 @@ const MealForm: React.FC<MealFormProps> = ({ onMealCreated }) => {
         setPreview(files.map((file) => URL.createObjectURL(file)));
     };
 
-    const handleFoodSearch = async () => {
+    /*const handleFoodSearch = async () => {
         if (!foodQuery.trim()) return;
         setSearchLoading(true);
         try {
@@ -60,7 +48,7 @@ const MealForm: React.FC<MealFormProps> = ({ onMealCreated }) => {
         } finally {
             setSearchLoading(false);
         }
-    };
+    };*/
 
     const handleSelectFood = (food: FoodItem) => {
         setName(food.name);
@@ -118,6 +106,8 @@ const MealForm: React.FC<MealFormProps> = ({ onMealCreated }) => {
         <form onSubmit={handleSubmit} className="space-y-4">
             {error && <p className="text-red-500">{error}</p>}
             <div>
+                {/* DISABLED FOOD SEARCH FOR NOW */}
+                {/*
                 <label className="block mb-1 font-medium">Search Food</label>
                 <div className="relative">
                     <input
@@ -134,7 +124,9 @@ const MealForm: React.FC<MealFormProps> = ({ onMealCreated }) => {
                     >
                         {searchLoading ? "Searching..." : "Search"}
                     </button>
+                    
                 </div>
+                */}
                 {foodResults.length > 0 && (
                     <ul className="border border-gray-300 rounded mt-1 max-h-60 overflow-y-auto bg-white absolute z-10 w-full">
                         {foodResults.map((food, index) => (

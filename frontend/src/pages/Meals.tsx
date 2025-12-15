@@ -57,7 +57,7 @@ const Meals: React.FC = () => {
                 {/* Meal List */}
                 <div className="p-5 bg-white border border-gray-300 rounded-lg">
                     <h3 className="text-xl font-semibold mb-3">Your Meals</h3>
-                    <MealList key={mealsUpdated.toString()} /> {/* re-render on update */}
+                    <MealList refreshKey={mealsUpdated ? 1 : 0} />
                 </div>
             </div>
         </>
