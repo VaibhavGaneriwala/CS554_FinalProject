@@ -7,6 +7,7 @@ import Dashboard from './pages/Dashboard';
 import Profile from './pages/Profile';
 import Workouts from './pages/Workouts';
 import Meals from './pages/Meals';
+import Progress from './pages/Progress';
 import Feed from './pages/Feed';
 import './App.css';
 
@@ -41,6 +42,7 @@ const App: React.FC = () => {
           <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
           <Route path="/workouts" element={<ProtectedRoute><Workouts /></ProtectedRoute>} />
           <Route path="/meals" element={<ProtectedRoute><Meals /></ProtectedRoute>} />
+          <Route path="/progress" element={<ProtectedRoute><Progress /></ProtectedRoute>} />
           <Route path="/feed" element={<ProtectedRoute><Feed /></ProtectedRoute>} />
           <Route path="/" element={<Navigate to="/dashboard" />} />
           <Route path="*" element={<div style={{display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', minHeight: '100vh', textAlign: 'center'}}><h1 style={{fontSize: '72px', margin: 0}}>404</h1><p style={{fontSize: '24px', color: '#666'}}>Page Not Found</p><a href='/dashboard' style={{marginTop: '20px', color: '#667eea'}}>Go to Dashboard</a></div>} />

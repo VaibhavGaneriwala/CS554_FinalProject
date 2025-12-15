@@ -59,7 +59,7 @@ router.post('/login', loginValidation, handleValidationErrors, async (req: Reque
             return;
         }
         const token = jwtUtils.generateToken({userId: user._id.toString(), email: user.email});
-        res.status(200).json({success: true, message: 'Login successful', data: {token, user: {id: user._id.toString(), firstName: user.firstName, lastName: user.lastName, email: user.email, age: user.age, height: user.height, weight: user.weight, profilePicture: user.profilePicture, createdAt: user.createdAt}}});
+        res.status(200).json({success: true, message: 'Login successful', data: {token, user: {id: user._id.toString(), firstName: user.firstName, lastName: user.lastName, email: user.email, age: user.age, height: user.height, weight: user.weight, goalWeight: user.goalWeight, profilePicture: user.profilePicture, createdAt: user.createdAt}}});
     } catch (error) {
         res.status(500).json({success: false, message: 'Error logging in', error: error instanceof Error ? error.message: 'Unknown error'});
     }
@@ -72,7 +72,7 @@ router.get('/me', authenticate, async (req: Request, res: Response): Promise<voi
             res.status(404).json({success: false, message: 'User not found'});
             return;
         }
-        res.status(200).json({success: true, data: {id: user._id.toString(), firstName: user.firstName, lastName: user.lastName, email: user.email, age: user.age, height: user.height, weight: user.weight, profilePicture: user.profilePicture, createdAt: user.createdAt}});
+        res.status(200).json({success: true, data: {id: user._id.toString(), firstName: user.firstName, lastName: user.lastName, email: user.email, age: user.age, height: user.height, weight: user.weight, goalWeight: user.goalWeight, profilePicture: user.profilePicture, createdAt: user.createdAt}});
     } catch (error) {
         res.status(500).json({success: false, message: 'Error fetching user', error: error instanceof Error ? error.message: 'Unknown error'});
     }
