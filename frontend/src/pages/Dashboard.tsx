@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import Navbar from "../components/Navbar";
@@ -7,26 +7,53 @@ const Dashboard: React.FC = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
 
+  const [showWelcome, setShowWelcome] = useState(false);
+
   const handleLogout = () => {
     logout();
     navigate("/login");
   };
 
+  useEffect(() => {
+    if (localStorage.getItem("justRegistered") === "true") {
+      setShowWelcome(true);
+      localStorage.removeItem("justRegistered");
+    }
+  }, []);
+
+  //const justRegistered = localStorage.getItem("justRegistered") === "true";
+
   return (
     <>
       <Navbar isAuthenticated={true} onLogout={handleLogout} />
       <div className="p-5 max-w-7xl mx-auto">
-        <div className="p-5 bg-gray-100 rounded-lg mb-8">
-          <h2 className="text-2xl font-semibold mb-2">
-            Welcome Back,{" "}
-            {user?.firstName
-              ? user.firstName.charAt(0).toUpperCase() +
+        {showWelcome ? (
+          <div className="p-5 bg-green-100 rounded-lg mb-8">
+            <h2 className="text-2xl font-semibold mb-2">
+              Welcome to Fitness Tracker,{" "}
+              {user?.firstName
+                ? user.firstName.charAt(0).toUpperCase() +
                 user.firstName.slice(1).toLowerCase()
-              : ""}
-            !
-          </h2>
-          <p className="text-gray-700 mb-2">What would you like to do today?</p>
-        </div>
+                : ""}
+              !
+            </h2>
+            <p className="text-gray-700 mb-2">
+              Thanks for joining! Start logging your workouts and meals today.
+            </p>
+          </div>
+        ) : (
+          <div className="p-5 bg-gray-100 rounded-lg mb-8">
+            <h2 className="text-2xl font-semibold mb-2">
+              Welcome Back,{" "}
+              {user?.firstName
+                ? user.firstName.charAt(0).toUpperCase() +
+                user.firstName.slice(1).toLowerCase()
+                : ""}
+              !
+            </h2>
+            <p className="text-gray-700 mb-2">What would you like to do today?</p>
+          </div>
+        )}
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
           <button
