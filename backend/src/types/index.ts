@@ -1,7 +1,7 @@
-import { Document } from "mongoose";
+import { Document, Types } from "mongoose";
 
 export interface IUser extends Document {
-  _id: string;
+  _id: Types.ObjectId;
   firstName: string;
   lastName: string;
   email: string;
@@ -24,7 +24,7 @@ export interface IExercise {
 }
 
 export interface IWorkout extends Document {
-  _id: string;
+  _id: Types.ObjectId;
   userId: string;
   title: string;
   split: string;
@@ -47,7 +47,7 @@ export interface INutritionInfo {
 }
 
 export interface IMeal extends Document {
-  _id: string;
+  _id: Types.ObjectId;
   userId: string;
   name: string;
   description?: string;
@@ -60,7 +60,7 @@ export interface IMeal extends Document {
 }
 
 export interface IProgress extends Document {
-  _id: string;
+  _id: Types.ObjectId;
   userId: string;
   type: "weight" | "pr" | "measurement" | "photo";
   date: Date;
@@ -81,14 +81,14 @@ export interface IProgress extends Document {
 }
 
 export interface IReply {
-  _id: string;
+  _id: Types.ObjectId;
   userId: string;
   text: string;
   createdAt: Date;
 }
 
 export interface IComment {
-  _id: string;
+  _id: Types.ObjectId;
   userId: string;
   text: string;
   createdAt: Date;
@@ -96,7 +96,7 @@ export interface IComment {
 }
 
 export interface IPost extends Document {
-  _id: string;
+  _id: Types.ObjectId;
   userId: string;
   type: "workout" | "meal" | "progress";
   content: string;
@@ -110,7 +110,7 @@ export interface IPost extends Document {
 }
 
 export interface IUserPublic {
-  _id: string;
+  _id: Types.ObjectId;
   firstName: string;
   lastName: string;
 }

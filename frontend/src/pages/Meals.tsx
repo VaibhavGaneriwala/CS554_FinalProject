@@ -1,11 +1,11 @@
-import React, { useState, useEffect } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import Navbar from '../components/Navbar';
 
 import MealForm from "../components/MealForm";
 import MealList from "../components/MealList";
-import { Meal, MealFormData } from "../types";
+import { Meal } from "../types";
 import { mealService } from "../services/mealService";
 
 const Meals: React.FC = () => {
@@ -15,17 +15,15 @@ const Meals: React.FC = () => {
     const [showForm, setShowForm] = useState(false);
     const [mealsUpdated, setMealsUpdated] = useState(false);
     const [editingMeal, setEditingMeal] = useState<Meal | null>(null);
-    const [formData, setFormData] = useState<MealFormData | null>(null);
-    const [error, setError] = useState<string | null>(null);
 
-    const loadMeals = async () => {
+    const loadMeals = useCallback(async () => {
         const res = await mealService.getMeals();
         setMeals(res.data?.meals || []);
-    };
+    }, []);
 
     useEffect(() => {
         loadMeals();
-    }, []);
+    }, [loadMeals, mealsUpdated]);
 
     const handleLogout = () => {
         logout();
@@ -40,23 +38,48 @@ const Meals: React.FC = () => {
 
     const handleEdit = (meal: Meal) => {
         setEditingMeal(meal);
-        setFormData({
-            name: meal.name,
-            mealType: meal.mealType,
-            nutrition: meal.nutrition,
-            date: meal.date.split("T")[0],
-            photos: [],
-        });
         setShowForm(true);
     };
 
-    const today = new Date().toDateString();
+    const now = new Date();
+    const startOfToday = new Date(now);
+    startOfToday.setHours(0, 0, 0, 0);
+    const startOfTomorrow = new Date(startOfToday);
+    startOfTomorrow.setDate(startOfTomorrow.getDate() + 1);
+    const latestMealDate = meals.reduce<Date | null>((latest, meal) => {
+        const d = new Date(meal.date);
+        if (Number.isNaN(d.getTime())) return latest;
+        if (!latest) return d;
+        return d > latest ? d : latest;
+    }, null);
 
-    const todayMeals = meals.filter(meal =>
-        new Date(meal.date).toDateString() === today
-    );
+    const hasMealsToday = meals.some((meal) => {
+        const d = new Date(meal.date);
+        return d >= startOfToday && d < startOfTomorrow;
+    });
 
-    const totals = todayMeals.reduce(
+    const startOfSummaryDay = new Date(hasMealsToday ? startOfToday : (latestMealDate || startOfToday));
+    startOfSummaryDay.setHours(0, 0, 0, 0);
+    const startOfNextSummaryDay = new Date(startOfSummaryDay);
+    startOfNextSummaryDay.setDate(startOfNextSummaryDay.getDate() + 1);
+
+    const summaryMeals = meals.filter((meal) => {
+        const d = new Date(meal.date);
+        return d >= startOfSummaryDay && d < startOfNextSummaryDay;
+    });
+
+    const summaryDayLabel = startOfSummaryDay.toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+    });
+
+    const newRecipesTodayCount = meals.filter((meal) => {
+        const created = new Date(meal.createdAt);
+        return created >= startOfToday && created < startOfTomorrow;
+    }).length;
+
+    const totals = summaryMeals.reduce(
         (acc, meal) => ({
             calories: acc.calories + (meal.nutrition?.calories || 0),
             protein: acc.protein + (meal.nutrition?.protein || 0),
@@ -66,8 +89,6 @@ const Meals: React.FC = () => {
         { calories: 0, protein: 0, carbs: 0, fat: 0 }
 
     );
-    console.log(meals);
-
     return (
         <>
             <Navbar isAuthenticated={true} onLogout={handleLogout} />
@@ -76,6 +97,13 @@ const Meals: React.FC = () => {
                 <div className="flex justify-between items-center mb-8">
                     <div>
                         <h1 className="text-3xl font-bold">Daily Summary</h1>
+                        <p className="text-sm text-gray-600 mt-1">
+                            Summary for: <span className="font-semibold">{summaryDayLabel}</span>
+                        </p>
+                        <p className="text-sm text-gray-600 mt-1">
+                            New recipes added today:{" "}
+                            <span className="font-semibold">{newRecipesTodayCount}</span>
+                        </p>
                     </div>
                 </div>
                 <div className="mb-6 grid grid-cols-2 md:grid-cols-4 gap-4">

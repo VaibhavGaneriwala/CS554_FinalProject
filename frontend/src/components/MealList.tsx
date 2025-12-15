@@ -11,8 +11,6 @@ interface MealListProps {
 const MealList: React.FC<MealListProps> = ({ onCreateMeal, onEditMeal, onDeleteMeal }) => {
     const [meals, setMeals] = useState<Meal[]>([]);
     const [mealType, setMealType] = useState("");
-    const [startDate, setStartDate] = useState("");
-    const [endDate, setEndDate] = useState("");
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
 
@@ -21,9 +19,7 @@ const MealList: React.FC<MealListProps> = ({ onCreateMeal, onEditMeal, onDeleteM
             setLoading(true);
             const res = await mealService.getMeals(
                 undefined,
-                mealType || undefined,
-                startDate || undefined,
-                endDate || undefined
+                mealType || undefined
             );
             console.log("API response:", res.data);
             setMeals(res.data?.meals || []);
