@@ -3,6 +3,20 @@ import mongoose from "mongoose";
 
 const errorHandler = (error: any, _req: Request, res: Response, _next: NextFunction): void => {
     console.error("Error:", error);
+    // Multer / file upload errors
+    if (error?.name === "MulterError") {
+        const message =
+            error.code === "LIMIT_FILE_SIZE"
+                ? "Uploaded file is too large"
+                : error.message || "File upload error";
+        res.status(400).json({ success: false, message });
+        return;
+    }
+    // Custom fileFilter errors (invalid mime, etc.)
+    if (typeof error?.message === "string" && error.message.toLowerCase().includes("invalid file type")) {
+        res.status(400).json({ success: false, message: error.message });
+        return;
+    }
     if (error instanceof mongoose.Error.ValidationError){
         const messages = Object.values(error.errors).map((err) => err.message);
         res.status(400).json({success: false, message: 'Validation Error', errors: messages});

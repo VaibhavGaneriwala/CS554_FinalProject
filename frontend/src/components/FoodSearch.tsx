@@ -1,20 +1,6 @@
-// src/components/FoodSearch.tsx
 import React, { useState, useEffect } from "react";
-import axios from "axios";
-
-interface FoodItem {
-  name: string;
-  image: string;
-  perServing: {
-    calories: number;
-    protein: number;
-    carbs: number;
-    fat: number;
-    fiber: number;
-    sugar: number;
-  };
-  servings: number;
-}
+import { FoodItem } from "../types";
+import { mealService } from "../services/mealService";
 
 interface Props {
   onSelect: (food: FoodItem, multiplier?: number) => void;
@@ -31,11 +17,8 @@ const FoodSearch: React.FC<Props> = ({ onSelect }) => {
     setLoading(true);
     setError("");
     try {
-      const token = localStorage.getItem("authToken"); 
-      const res = await axios.get(`/api/meals/search-food?q=${encodeURIComponent(query)}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      setResults(res.data.data || []);
+      const res = await mealService.searchFood(query);
+      setResults(res.data || []);
     } catch (err: any) {
       setError(err.response?.data?.message || "Error searching food");
     } finally {
@@ -44,7 +27,7 @@ const FoodSearch: React.FC<Props> = ({ onSelect }) => {
   };
 
   const handleSelect = (food: FoodItem) => {
-    const multiplier = 1; 
+    const multiplier = 1;
     onSelect(food, multiplier);
   };
 

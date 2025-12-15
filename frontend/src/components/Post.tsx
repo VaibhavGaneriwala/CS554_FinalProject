@@ -80,12 +80,9 @@ const PostCard: React.FC<PostCardProps> = ({
       <div className="flex justify-between items-start mb-2">
         <div>
           <p className="text-sm font-semibold text-gray-800">
-            User{" "}
-            {(post as any).user?.firstName
-              ? `${(post as any).user.firstName} ${
-                  (post as any).user.lastName || ""
-                }`.trim()
-              : `User ${post.userId}`}
+            {post.user?.firstName
+              ? `${post.user.firstName} ${post.user.lastName || ""}`.trim()
+              : post.userId}
           </p>
           <p className="text-xs text-gray-500">
             {formatPostDate(post.createdAt)}

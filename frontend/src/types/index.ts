@@ -49,6 +49,7 @@ export interface Workout {
   title: string;
   split: string;
   exercises: Exercise[];
+  media?: string[];
   date: string;
   duration?: number;
   notes?: string;
@@ -60,10 +61,12 @@ export interface WorkoutFormData {
   title: string;
   split: string;
   exercises: Exercise[];
+  media?: File[];
   date?: string;
   duration?: number;
   notes?: string;
 }
+
 
 export interface NutritionInfo {
   calories: number;
@@ -201,4 +204,18 @@ export interface PaginatedResponse<T> {
     items: T[];
     pagination: Pagination;
   };
+}
+
+export interface FoodItem {
+  name: string;
+  image: string;
+  perServing: {
+    calories: number;
+    protein: number;
+    carbs: number;
+    fat: number;
+    fiber: number;
+    sugar: number;
+  };
+  servings: number;
 }

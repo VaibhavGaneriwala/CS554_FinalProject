@@ -7,7 +7,7 @@ import MealForm from "../components/MealForm";
 import MealList from "../components/MealList";
 
 const Meals: React.FC = () => {
-    const { user, logout } = useAuth();
+    const { logout } = useAuth();
     const navigate = useNavigate();
     const [showForm, setShowForm] = useState(false);
     const [mealsUpdated, setMealsUpdated] = useState(false);
@@ -27,38 +27,39 @@ const Meals: React.FC = () => {
         <>
             <Navbar isAuthenticated={true} onLogout={handleLogout} />
 
-            <div className="p-5 max-w-4xl mx-auto">
-                <h2 className="text-2xl font-semibold mb-4">🍽️ Meals</h2>
-
-                {/* Add Meal Button */}
-                {!showForm && (
+            <div className="p-5 max-w-7xl mx-auto">
+                <div className="flex justify-between items-center mb-8">
+                    <div>
+                        <h1 className="text-3xl font-bold">Meals</h1>
+                    </div>
                     <button
                         onClick={() => setShowForm(true)}
-                        className="mb-4 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+                        className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded transition-colors font-medium"
                     >
-                        + Add Meal
+                        + New Meal
                     </button>
-                )}
+                </div>
 
-                {/* Meal Form */}
                 {showForm && (
-                    <div className="mb-8 p-5 bg-white border border-gray-300 rounded-lg">
-                        <h3 className="text-xl font-semibold mb-3">Add a New Meal</h3>
+                    <div className="mb-8 p-6 bg-white border border-gray-300 rounded-lg shadow-sm">
+                        <h2 className="text-2xl font-semibold mb-4">Add a New Meal</h2>
                         <MealForm onMealCreated={handleMealCreated} />
-                        <button
-                            onClick={() => setShowForm(false)}
-                            className="mt-2 text-sm text-gray-500 hover:underline"
-                        >
-                            Cancel
-                        </button>
+                        <div className="flex gap-3 mt-4">
+                            <button
+                                type="button"
+                                onClick={() => setShowForm(false)}
+                                className="px-6 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded transition-colors font-medium"
+                            >
+                                Cancel
+                            </button>
+                        </div>
                     </div>
                 )}
 
-                {/* Meal List */}
-                <div className="p-5 bg-white border border-gray-300 rounded-lg">
-                    <h3 className="text-xl font-semibold mb-3">Your Meals</h3>
-                    <MealList key={mealsUpdated.toString()} /> {/* re-render on update */}
-                </div>
+                <MealList
+                    key={mealsUpdated.toString()} 
+                    onCreateMeal={() => setShowForm(true)}
+                />
             </div>
         </>
     );

@@ -1,5 +1,5 @@
 import api from './api';
-import { Meal, MealFormData, ApiResponse, Pagination } from '../types';
+import { Meal, MealFormData, ApiResponse, Pagination, FoodItem } from '../types';
 
 export const mealService = {
     createMeal: async (data: MealFormData): Promise<ApiResponse<Meal>> => {
@@ -53,6 +53,13 @@ export const mealService = {
 
     deleteMeal: async (mealId: string): Promise<ApiResponse> => {
         const response = await api.delete<ApiResponse>(`/meals/${mealId}`);
+        return response.data;
+    },
+
+    searchFood: async (query: string): Promise<ApiResponse<FoodItem[]>> => {
+        const response = await api.get<ApiResponse<FoodItem[]>>(`/meals/search-food`, {
+            params: { q: query }
+        });
         return response.data;
     },
 };
