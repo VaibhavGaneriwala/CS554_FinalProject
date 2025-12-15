@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import Navbar from '../components/Navbar';
@@ -17,6 +17,15 @@ const Meals: React.FC = () => {
     const [editingMeal, setEditingMeal] = useState<Meal | null>(null);
     const [formData, setFormData] = useState<MealFormData | null>(null);
     const [error, setError] = useState<string | null>(null);
+
+    const loadMeals = async () => {
+        const res = await mealService.getMeals();
+        setMeals(res.data?.meals || []);
+    };
+
+    useEffect(() => {
+        loadMeals();
+    }, []);
 
     const handleLogout = () => {
         logout();
@@ -41,11 +50,56 @@ const Meals: React.FC = () => {
         setShowForm(true);
     };
 
+    const today = new Date().toDateString();
+
+    const todayMeals = meals.filter(meal =>
+        new Date(meal.date).toDateString() === today
+    );
+
+    const totals = todayMeals.reduce(
+        (acc, meal) => ({
+            calories: acc.calories + (meal.nutrition?.calories || 0),
+            protein: acc.protein + (meal.nutrition?.protein || 0),
+            carbs: acc.carbs + (meal.nutrition?.carbs || 0),
+            fat: acc.fat + (meal.nutrition?.fat || 0),
+        }),
+        { calories: 0, protein: 0, carbs: 0, fat: 0 }
+
+    );
+    console.log(meals);
+
     return (
         <>
             <Navbar isAuthenticated={true} onLogout={handleLogout} />
 
             <div className="p-5 max-w-7xl mx-auto">
+                <div className="flex justify-between items-center mb-8">
+                    <div>
+                        <h1 className="text-3xl font-bold">Daily Summary</h1>
+                    </div>
+                </div>
+                <div className="mb-6 grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div className="bg-blue-50 p-4 rounded">
+                        <p className="text-sm text-gray-600">Calories</p>
+                        <p className="text-2xl font-bold">{totals.calories}</p>
+                    </div>
+
+                    <div className="bg-green-50 p-4 rounded">
+                        <p className="text-sm text-gray-600">Protein</p>
+                        <p className="text-2xl font-bold">{totals.protein}g</p>
+                    </div>
+
+                    <div className="bg-yellow-50 p-4 rounded">
+                        <p className="text-sm text-gray-600">Carbs</p>
+                        <p className="text-2xl font-bold">{totals.carbs}g</p>
+                    </div>
+
+                    <div className="bg-red-50 p-4 rounded">
+                        <p className="text-sm text-gray-600">Fat</p>
+                        <p className="text-2xl font-bold">{totals.fat}g</p>
+                    </div>
+                </div>
+
                 <div className="flex justify-between items-center mb-8">
                     <div>
                         <h1 className="text-3xl font-bold">Meals</h1>
