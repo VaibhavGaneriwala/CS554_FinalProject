@@ -7,8 +7,6 @@ import Dashboard from './pages/Dashboard';
 import Profile from './pages/Profile';
 import Workouts from './pages/Workouts';
 import Meals from './pages/Meals';
-import Feed from './pages/Feed';
-import Progress from './pages/Progress';
 import './App.css';
 
 const ProtectedRoute: React.FC<{children: React.ReactElement}> = ({children}) => {
@@ -42,6 +40,7 @@ const App: React.FC = () => {
           <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
           <Route path="/workouts" element={<ProtectedRoute><Workouts /></ProtectedRoute>} />
           <Route path="/meals" element={<ProtectedRoute><Meals /></ProtectedRoute>} />
+          <Route path="/progress" element={<ProtectedRoute><Progress /></ProtectedRoute>} />
           <Route path="/feed" element={<ProtectedRoute><Feed /></ProtectedRoute>} />
           <Route path="/progress" element={<ProtectedRoute><Progress /></ProtectedRoute>} />
           <Route path="/" element={<Navigate to="/dashboard" />} />
