@@ -19,6 +19,9 @@ const Workouts: React.FC = () => {
   const [mediaFiles, setMediaFiles] = useState<File[]>([]);
   const [mediaPreviewUrls, setMediaPreviewUrls] = useState<string[]>([]);
 
+  const [existingMedia, setExistingMedia] = useState<string[]>([]);
+  const [removedMedia, setRemovedMedia] = useState<string[]>([]);
+
   const [formData, setFormData] = useState<WorkoutFormData>({
     title: "",
     split: "",
@@ -27,6 +30,7 @@ const Workouts: React.FC = () => {
     duration: undefined,
     notes: "",
     media: [],
+    removedMedia: [],
   });
 
   const ALLOWED_IMAGE_TYPES = useMemo(() => new Set(["image/jpeg", "image/jpg", "image/png", "image/webp"]), []);
@@ -153,6 +157,14 @@ const Workouts: React.FC = () => {
       return;
     }
 
+    const keptExistingCount = existingMedia.filter((u) => !removedMedia.includes(u)).length;
+    const totalAfter = keptExistingCount + files.length;
+    if (totalAfter > 5) {
+      setError(`You can only have up to 5 media items total. You currently have ${keptExistingCount} kept, and selected ${files.length}.`);
+      e.target.value = "";
+      return;
+    }
+
     mediaPreviewUrls.forEach((u) => URL.revokeObjectURL(u));
 
     setMediaFiles(files);
@@ -163,6 +175,14 @@ const Workouts: React.FC = () => {
       ...prev,
       media: files,
     }));
+  };
+
+  const handleRemoveExistingMedia = (url: string) => {
+    setRemovedMedia((prev) => (prev.includes(url) ? prev : [...prev, url]));
+  };
+
+  const handleUndoRemoveExistingMedia = (url: string) => {
+    setRemovedMedia((prev) => prev.filter((u) => u !== url));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -197,6 +217,7 @@ const Workouts: React.FC = () => {
         duration: formData.duration ? Number(formData.duration) : undefined,
         notes: formData.notes?.trim() || undefined,
         media: mediaFiles.length > 0 ? mediaFiles : undefined,
+        removedMedia: removedMedia,
       };
 
       if (editingWorkout) {
@@ -222,6 +243,11 @@ const Workouts: React.FC = () => {
 
   const handleEdit = (workout: Workout) => {
     setEditingWorkout(workout);
+
+    const media = Array.isArray(workout.media) ? workout.media : [];
+    setExistingMedia(media);
+    setRemovedMedia([]);
+
     setFormData({
       title: workout.title,
       split: workout.split,
@@ -230,6 +256,7 @@ const Workouts: React.FC = () => {
       duration: workout.duration,
       notes: workout.notes || "",
       media: [],
+      removedMedia: [],
     });
 
     mediaPreviewUrls.forEach((u) => URL.revokeObjectURL(u));
@@ -261,7 +288,11 @@ const Workouts: React.FC = () => {
       duration: undefined,
       notes: "",
       media: [],
+      removedMedia: [],
     });
+
+    setExistingMedia([]);
+    setRemovedMedia([]);
 
     mediaPreviewUrls.forEach((u) => URL.revokeObjectURL(u));
     setMediaFiles([]);
@@ -272,6 +303,8 @@ const Workouts: React.FC = () => {
     const d = new Date(dateString);
     return d.toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" });
   };
+
+  const keptExistingMedia = existingMedia.filter((u) => !removedMedia.includes(u));
 
   return (
     <>
@@ -375,39 +408,81 @@ const Workouts: React.FC = () => {
                 </div>
               </div>
 
-              {!editingWorkout && (
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Workout Media (optional) — JPG/PNG + MP4/WebM
-                  </label>
-                  <input
-                    type="file"
-                    multiple
-                    accept={ACCEPT_ATTR}
-                    onChange={handleMediaChange}
-                    className="w-full"
-                  />
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Workout Media (optional) — JPG/PNG + MP4/WebM
+                </label>
 
-                  {mediaPreviewUrls.length > 0 && (
-                    <div className="mt-3 grid grid-cols-2 md:grid-cols-4 gap-2">
-                      {mediaPreviewUrls.map((src, idx) => {
-                        const f = mediaFiles[idx];
-                        const isVideo = f?.type?.startsWith("video/");
-                        if (isVideo) {
-                          return (
-                            <video key={idx} controls className="w-full h-28 rounded border">
-                              <source src={src} type={f.type} />
-                            </video>
-                          );
-                        }
+                {editingWorkout && keptExistingMedia.length > 0 && (
+                  <div className="mb-3">
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                      {keptExistingMedia.map((url, idx) => {
+                        const ext = getExtFromUrl(url);
+                        const videoMime = getVideoMimeFromExt(ext);
+                        const src = toFileProxyUrl(url);
+
                         return (
-                          <img key={idx} src={src} alt={`media-${idx}`} className="w-full h-28 object-cover rounded border" />
+                          <div key={idx} className="relative">
+                            {videoMime ? (
+                              <video controls className="w-full h-28 rounded border">
+                                <source src={src} type={videoMime} />
+                              </video>
+                            ) : (
+                              <img src={src} alt={`existing-${idx}`} className="w-full h-28 object-cover rounded border" />
+                            )}
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveExistingMedia(url)}
+                              className="absolute top-1 right-1 px-2 py-1 bg-red-600 text-white text-xs rounded"
+                            >
+                              Remove
+                            </button>
+                          </div>
                         );
                       })}
                     </div>
-                  )}
-                </div>
-              )}
+                  </div>
+                )}
+
+                {editingWorkout && removedMedia.length > 0 && (
+                  <div className="mb-3">
+                    <p className="text-sm text-gray-600 mb-2">Removed (will be deleted when you save):</p>
+                    <div className="flex flex-wrap gap-2">
+                      {removedMedia.map((url, idx) => (
+                        <button
+                          key={idx}
+                          type="button"
+                          onClick={() => handleUndoRemoveExistingMedia(url)}
+                          className="px-2 py-1 bg-gray-200 text-gray-700 text-xs rounded"
+                        >
+                          Undo remove #{idx + 1}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                <input type="file" multiple accept={ACCEPT_ATTR} onChange={handleMediaChange} className="w-full" />
+
+                {mediaPreviewUrls.length > 0 && (
+                  <div className="mt-3 grid grid-cols-2 md:grid-cols-4 gap-2">
+                    {mediaPreviewUrls.map((src, idx) => {
+                      const f = mediaFiles[idx];
+                      const isVideo = f?.type?.startsWith("video/");
+                      if (isVideo) {
+                        return (
+                          <video key={idx} controls className="w-full h-28 rounded border">
+                            <source src={src} type={f.type} />
+                          </video>
+                        );
+                      }
+                      return (
+                        <img key={idx} src={src} alt={`media-${idx}`} className="w-full h-28 object-cover rounded border" />
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
 
               <div>
                 <div className="flex justify-between items-center mb-2">

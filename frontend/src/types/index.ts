@@ -61,10 +61,12 @@ export interface WorkoutFormData {
   split: string;
   exercises: Exercise[];
   media?: File[];
+  removedMedia?: string[];
   date?: string;
   duration?: number;
   notes?: string;
 }
+
 
 
 export interface NutritionInfo {
