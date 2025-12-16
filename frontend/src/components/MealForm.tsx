@@ -1,30 +1,15 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { mealService } from "../services/mealService";
-import { MealFormData } from "../types";
-import axios from "axios";
+import { FoodItem, Meal, MealFormData } from "../types";
 
 interface MealFormProps {
     onMealCreated: () => void;
+    mealToEdit?: Meal | null;
 };
 
-interface FoodItem {
-    name: string;
-    image: string;
-    perServing: {
-        calories: number;
-        protein: number;
-        carbs: number;
-        fat: number;
-        fiber: number;
-        sugar: number;
-    };
-    servings: number;
-};
-
-const MealForm: React.FC<MealFormProps> = ({ onMealCreated }) => {
+const MealForm: React.FC<MealFormProps> = ({ onMealCreated, mealToEdit }) => {
     const [name, setName] = useState("");
     const [mealType, setMealType] = useState<MealFormData["mealType"]>("breakfast");
-    //const [description, setDescription] = useState("");
     const [calories, setCalories] = useState(0);
     const [protein, setProtein] = useState(0);
     const [carbs, setCarbs] = useState(0);
@@ -38,6 +23,18 @@ const MealForm: React.FC<MealFormProps> = ({ onMealCreated }) => {
     const [foodResults, setFoodResults] = useState<FoodItem[]>([]);
     const [searchLoading, setSearchLoading] = useState(false);
 
+    useEffect(() => {
+        if (mealToEdit) {
+            setName(mealToEdit.name);
+            setMealType(mealToEdit.mealType);
+            setCalories(mealToEdit.nutrition.calories);
+            setProtein(mealToEdit.nutrition.protein);
+            setCarbs(mealToEdit.nutrition.carbs);
+            setFat(mealToEdit.nutrition.fat);
+        }
+    }, [mealToEdit]);
+
+
     const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (!e.target.files) return;
         const files = Array.from(e.target.files) as File[];
@@ -49,25 +46,38 @@ const MealForm: React.FC<MealFormProps> = ({ onMealCreated }) => {
     const handleFoodSearch = async () => {
         if (!foodQuery.trim()) return;
         setSearchLoading(true);
+        setError(null);
         try {
-            const token = localStorage.getItem("authToken");
-            const res = await axios.get(`/api/meals/search-food?q=${encodeURIComponent(foodQuery)}`, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
-            setFoodResults(res.data.data || []);
-        } catch (err) {
+            const res = await mealService.searchFood(foodQuery);
+            if (res.success) {
+                setFoodResults(res.data || []);
+            } else {
+                setFoodResults([]);
+                setError(res.message || "Food search failed");
+            }
+        } catch (err: any) {
             console.error(err);
+            const msg =
+                err?.response?.data?.error ||
+                err?.response?.data?.message ||
+                err?.message ||
+                "Food search failed";
+            setError(msg);
         } finally {
             setSearchLoading(false);
         }
-    }; const handleSelectFood = (food: FoodItem) => {
+    };
+
+    const handleSelectFood = (food: FoodItem) => {
         setName(food.name);
         setCalories(food.perServing.calories);
         setProtein(food.perServing.protein);
         setCarbs(food.perServing.carbs);
         setFat(food.perServing.fat);
         setFoodResults([]);
-    }; const handleSubmit = async (e: React.FormEvent) => {
+    };
+
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
         setError(null); try {
@@ -81,8 +91,14 @@ const MealForm: React.FC<MealFormProps> = ({ onMealCreated }) => {
                     fat: Number(fat),
                 },
                 photos: photos || undefined,
-            }; await mealService.createMeal(data);
-            console.log("Submitting:", data); setName("");
+            };
+
+            if (mealToEdit) {
+                await mealService.updateMeal(mealToEdit._id, data);
+            } else {
+                await mealService.createMeal(data);
+            }
+        
             setMealType("breakfast");
             setCalories(0);
             setProtein(0);
@@ -99,7 +115,9 @@ const MealForm: React.FC<MealFormProps> = ({ onMealCreated }) => {
         } finally {
             setLoading(false);
         }
-    }; return (
+    };
+
+    return (
         <form onSubmit={handleSubmit} className="space-y-4">
             {error && (
                 <div className="p-4 bg-red-50 border-l-4 border-red-500 rounded-lg">
@@ -177,6 +195,7 @@ const MealForm: React.FC<MealFormProps> = ({ onMealCreated }) => {
                     onChange={(e) => setCalories(Number(e.target.value))}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     min="0"
+                    step="any"
                 />
             </div>
             <div>
@@ -188,6 +207,7 @@ const MealForm: React.FC<MealFormProps> = ({ onMealCreated }) => {
                     onChange={(e) => setProtein(Number(e.target.value))}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     min="0"
+                    step="any"
                 />
             </div>
             <div>
@@ -199,6 +219,7 @@ const MealForm: React.FC<MealFormProps> = ({ onMealCreated }) => {
                     onChange={(e) => setCarbs(Number(e.target.value))}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     min="0"
+                    step="any"
                 />
             </div>
             <div>
@@ -210,6 +231,7 @@ const MealForm: React.FC<MealFormProps> = ({ onMealCreated }) => {
                     onChange={(e) => setFat(Number(e.target.value))}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     min="0"
+                    step="any"
                 />
             </div>
             <div>
@@ -238,7 +260,7 @@ const MealForm: React.FC<MealFormProps> = ({ onMealCreated }) => {
                 className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded transition-colors font-medium disabled:opacity-50"
                 disabled={loading}
             >
-                {loading ? "Saving..." : "Log Meal"}
+                {loading ? "Saving..." : mealToEdit ? "Update Meal" : "Log Meal"}
             </button>
         </form>
     );

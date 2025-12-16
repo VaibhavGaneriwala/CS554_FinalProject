@@ -1,6 +1,11 @@
 import axios from 'axios';
 
-export async function getNutritionInfoEdamam(query: string) {
+type UpstreamError = Error & {
+  status?: number;
+  details?: unknown;
+};
+
+export async function getNutritionInfoEdamam(query: string, accountUser?: string) {
 
   if (!query || typeof query !== "string") {
     throw new Error("Invalid food query");
@@ -24,7 +29,14 @@ export async function getNutritionInfoEdamam(query: string) {
   };
 
   try {
-    const response = await axios.get(url, { params });
+    const headerAccountUser = accountUser || process.env.EDAMAM_ACCOUNT_USER || "anonymous";
+    const response = await axios.get(url, {
+      params,
+      timeout: 10_000,
+      headers: {
+        "Edamam-Account-User": headerAccountUser,
+      },
+    });
     const hits = response.data.hits || [];
 
     return hits.map((hit: any) => {
@@ -56,7 +68,23 @@ export async function getNutritionInfoEdamam(query: string) {
       };
     });
   } catch (err: any) {
-    console.error("Edamam search error:", err.response?.data || err.message);
-    throw new Error("Failed to fetch data from Edamam");
+    if (axios.isAxiosError(err)) {
+      const status = err.response?.status ?? 502;
+      const details = err.response?.data;
+      const msg =
+        (typeof details === "object" && details && ("message" in details) && (details as any).message) ||
+        (typeof details === "object" && details && ("error" in details) && (details as any).error) ||
+        err.message ||
+        "Edamam request failed";
+
+      console.error("Edamam search error:", { status, details });
+      const e: UpstreamError = new Error(`Edamam API error (${status}): ${msg}`);
+      e.status = status;
+      e.details = details;
+      throw e;
+    }
+
+    console.error("Edamam search error:", err?.message || err);
+    throw new Error(err?.message || "Failed to fetch data from Edamam");
   }
 }

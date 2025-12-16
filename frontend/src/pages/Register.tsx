@@ -160,7 +160,7 @@ const Register: React.FC = () => {
                                 </div>
                                 <div className='form-group'>
                                     <label htmlFor="weight">Weight</label>
-                                    <input id='weight' type="number" name='weight' value={formData.weight || ''} onChange={handleChange} placeholder='Enter your weight (optional) in kg' className='form-input' />
+                                    <input id='weight' type="number" name='weight' min="44" max="1100" step="0.1" value={formData.weight || ''} onChange={handleChange} placeholder='Enter your weight (optional) in lbs' className='form-input' />
                                 </div>
                             </div>
                             <button type='submit' disabled={loading} className='auth-button'>{loading ? 'Registering...' : 'Register'}</button>

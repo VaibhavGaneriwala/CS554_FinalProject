@@ -11,6 +11,12 @@ services:
       - mongodb_data:/data/db
     networks:
       - fitness-network
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "mongodb://localhost:27017/admin", "--eval", "db.runCommand({ ping: 1 }).ok"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 5s
 
   redis:
     image: redis:latest
@@ -51,7 +57,7 @@ services:
     environment:
       NODE_ENV: development
       PORT: 3000
-      MONGODB_URI: mongodb://mongodb:27017/cs554-finalproject
+      MONGO_URI: mongodb://mongodb:27017/cs554-finalproject
       REDIS_HOST: redis
       REDIS_PORT: 6379
       MINIO_ENDPOINT: minio
@@ -63,14 +69,37 @@ services:
       JWT_EXPIRES_IN: 7d
       CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:3001}
     depends_on:
-      - mongodb
-      - redis
-      - minio
+      mongodb:
+        condition: service_healthy
+      redis:
+        condition: service_started
+      minio:
+        condition: service_started
     networks:
       - fitness-network
     volumes:
       - ./backend:/app
       - /app/node_modules
+
+  seed:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: backend-seed
+    restart: "no"
+    profiles: ["seed"]
+    environment:
+      NODE_ENV: development
+      MONGO_URI: mongodb://mongodb:27017/cs554-finalproject
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    networks:
+      - fitness-network
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+    command: ["npm", "run", "seed"]
 
   frontend:
     build:

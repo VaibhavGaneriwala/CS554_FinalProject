@@ -1,7 +1,7 @@
-import { Document } from "mongoose";
+import { Document, Types } from "mongoose";
 
 export interface IUser extends Document {
-  _id: string;
+  _id: Types.ObjectId;
   firstName: string;
   lastName: string;
   email: string;
@@ -9,6 +9,7 @@ export interface IUser extends Document {
   age?: number;
   height?: number;
   weight?: number;
+  goalWeight?: number;
   profilePicture?: string;
   createdAt: Date;
   updatedAt: Date;
@@ -24,7 +25,7 @@ export interface IExercise {
 }
 
 export interface IWorkout extends Document {
-  _id: string;
+  _id: Types.ObjectId;
   userId: string;
   title: string;
   split: string;
@@ -47,7 +48,7 @@ export interface INutritionInfo {
 }
 
 export interface IMeal extends Document {
-  _id: string;
+  _id: Types.ObjectId;
   userId: string;
   name: string;
   description?: string;
@@ -60,7 +61,7 @@ export interface IMeal extends Document {
 }
 
 export interface IProgress extends Document {
-  _id: string;
+  _id: Types.ObjectId;
   userId: string;
   type: "weight" | "pr" | "measurement" | "photo";
   date: Date;
@@ -80,15 +81,44 @@ export interface IProgress extends Document {
   updatedAt: Date;
 }
 
+export interface IWeightProgress extends Document {
+  _id: Types.ObjectId;
+  userId: string;
+  date: Date;
+  weight: number;
+  photos?: string[];
+  notes?: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface IPRExercise extends Document {
+  _id: Types.ObjectId;
+  userId: string;
+  name: string;
+  unit: "lbs" | "reps" | "time";
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface IPRProgress extends Document {
+  _id: Types.ObjectId;
+  userId: string;
+  prExerciseId: string;
+  value: number;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
 export interface IReply {
-  _id: string;
+  _id: Types.ObjectId;
   userId: string;
   text: string;
   createdAt: Date;
 }
 
 export interface IComment {
-  _id: string;
+  _id: Types.ObjectId;
   userId: string;
   text: string;
   createdAt: Date;
@@ -96,7 +126,7 @@ export interface IComment {
 }
 
 export interface IPost extends Document {
-  _id: string;
+  _id: Types.ObjectId;
   userId: string;
   type: "workout" | "meal" | "progress";
   content: string;
@@ -110,7 +140,7 @@ export interface IPost extends Document {
 }
 
 export interface IUserPublic {
-  _id: string;
+  _id: Types.ObjectId;
   firstName: string;
   lastName: string;
 }

@@ -35,7 +35,12 @@ const upload = multer({
       "video/quicktime",
     ];
     if (allowed.includes(file.mimetype)) cb(null, true);
-    else cb(new Error("Invalid file type. Only JPG/PNG/WebP images and MP4/WebM/MOV videos are allowed."));
+    else
+      cb(
+        new Error(
+          "Invalid file type. Only JPG/PNG/WebP images and MP4/WebM/MOV videos are allowed."
+        )
+      );
   },
 });
 
@@ -63,7 +68,14 @@ const normalizeWorkoutBody = (req: Request, _res: Response, next: NextFunction) 
       req.body.duration = req.body.duration ? Number(req.body.duration) : undefined;
     }
 
-    // keep as ISO/date string for validation; convert to Date when saving
+    if (typeof req.body.removedMedia === "string") {
+      try {
+        req.body.removedMedia = JSON.parse(req.body.removedMedia);
+      } catch {
+        req.body.removedMedia = [];
+      }
+    }
+
     next();
   } catch (e) {
     next(e);
@@ -114,7 +126,7 @@ const workoutValidation = [
 
   body("exercises.*.weight")
     .isFloat({ min: 0, max: 1000 })
-    .withMessage("Weight must be between 0 and 1000kg"),
+    .withMessage("Weight must be between 0 and 1000 lbs"),
 
   body("date").optional().isISO8601().withMessage("Invalid date format"),
 
@@ -157,7 +169,6 @@ router.post(
           await minioUtils.uploadStream(fileName, stream, file.size, file.mimetype);
           const fileUrl = await minioUtils.getFileUrl(fileName);
           mediaUrls.push(fileUrl);
-
           fs.unlink(file.path, () => {});
         }
       }
@@ -262,6 +273,8 @@ router.get(
 router.put(
   "/:workoutId",
   authenticate,
+  upload.array("media", 5),
+  normalizeWorkoutBody,
   param("workoutId").custom((value) => {
     if (!isValidObjectId(value)) throw new Error("Invalid workout ID");
     return true;
@@ -284,14 +297,50 @@ router.put(
         return;
       }
 
-      const updatedWorkout = await Workout.findByIdAndUpdate(workoutId, req.body, {
-        new: true,
-        runValidators: true,
-      });
+      const files = req.files as Express.Multer.File[];
+      const removedMedia: string[] = Array.isArray(req.body.removedMedia) ? req.body.removedMedia : [];
+
+      const existing = Array.isArray(workout.media) ? workout.media : [];
+      const keep = existing.filter((u) => !removedMedia.includes(u));
+
+      if (removedMedia.length > 0) {
+        for (const url of removedMedia) {
+          const objectName = extractObjectNameFromPresignedUrl(url);
+          if (objectName) {
+            try {
+              await minioUtils.deleteFile(objectName);
+            } catch {}
+          }
+        }
+      }
+
+      const newMediaUrls: string[] = [];
+      if (files && files.length > 0 && userId) {
+        for (const file of files) {
+          const fileName = minioUtils.generatefileName(file.originalname, userId);
+          const stream = fs.createReadStream(file.path);
+          await minioUtils.uploadStream(fileName, stream, file.size, file.mimetype);
+          const fileUrl = await minioUtils.getFileUrl(fileName);
+          newMediaUrls.push(fileUrl);
+          fs.unlink(file.path, () => {});
+        }
+      }
+
+      const { title, split, exercises, date, duration, notes } = req.body;
+
+      workout.title = title;
+      workout.split = split;
+      workout.exercises = exercises;
+      workout.date = date ? new Date(date) : workout.date;
+      workout.duration = typeof duration === "number" ? duration : workout.duration;
+      workout.notes = notes;
+      workout.media = [...keep, ...newMediaUrls];
+
+      const saved = await workout.save();
 
       if (userId) await clearWorkoutCache(userId);
 
-      res.status(200).json({ success: true, message: "Workout updated successfully", data: updatedWorkout });
+      res.status(200).json({ success: true, message: "Workout updated successfully", data: saved });
     } catch (error) {
       res.status(500).json({
         success: false,

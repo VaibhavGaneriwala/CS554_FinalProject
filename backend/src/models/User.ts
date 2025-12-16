@@ -51,8 +51,13 @@ const UserSchema = new Schema<IUser>(
         },
         weight: {
             type: Number,
-            min: [20, "Weight must be at least 20kg"],
-            max: [500, "Weight cannot exceed 500kg"],
+            min: [44, "Weight must be at least 44 lbs"],
+            max: [1100, "Weight cannot exceed 1100 lbs"],
+        },
+        goalWeight: {
+            type: Number,
+            min: [44, "Weight must be at least 44 lbs"],
+            max: [1100, "Weight cannot exceed 1100 lbs"],
         },
         profilePicture: {
             type: String,

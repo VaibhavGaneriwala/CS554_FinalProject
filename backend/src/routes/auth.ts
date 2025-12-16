@@ -14,7 +14,7 @@ const registerValidation = [
     body('password').trim().isLength({min: 16}).withMessage('Password must be at least 16 characters long').matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{16,}$/).withMessage('Password must include uppercase, lowercase, number, and symbol'),
     body('age').optional().isInt({min: 16, max: 120}).withMessage('Age must be between 16 and 120'),
     body('height').optional().isFloat({min: 24, max: 96}).withMessage('Height must be between 2 and 8 feet'),
-    body('weight').optional().isFloat({min: 20, max: 500}).withMessage('Weight must be between 20 and 500kg'),
+    body('weight').optional().isFloat({min: 44, max: 1100}).withMessage('Weight must be between 44 and 1100 lbs'),
 ];
 
 const loginValidation = [
@@ -59,7 +59,7 @@ router.post('/login', loginValidation, handleValidationErrors, async (req: Reque
             return;
         }
         const token = jwtUtils.generateToken({userId: user._id.toString(), email: user.email});
-        res.status(200).json({success: true, message: 'Login successful', data: {token, user: {id: user._id.toString(), firstName: user.firstName, lastName: user.lastName, email: user.email, age: user.age, height: user.height, weight: user.weight, profilePicture: user.profilePicture, createdAt: user.createdAt}}});
+        res.status(200).json({success: true, message: 'Login successful', data: {token, user: {id: user._id.toString(), firstName: user.firstName, lastName: user.lastName, email: user.email, age: user.age, height: user.height, weight: user.weight, goalWeight: user.goalWeight, profilePicture: user.profilePicture, createdAt: user.createdAt}}});
     } catch (error) {
         res.status(500).json({success: false, message: 'Error logging in', error: error instanceof Error ? error.message: 'Unknown error'});
     }
@@ -72,7 +72,7 @@ router.get('/me', authenticate, async (req: Request, res: Response): Promise<voi
             res.status(404).json({success: false, message: 'User not found'});
             return;
         }
-        res.status(200).json({success: true, data: {id: user._id.toString(), firstName: user.firstName, lastName: user.lastName, email: user.email, age: user.age, height: user.height, weight: user.weight, profilePicture: user.profilePicture, createdAt: user.createdAt}});
+        res.status(200).json({success: true, data: {id: user._id.toString(), firstName: user.firstName, lastName: user.lastName, email: user.email, age: user.age, height: user.height, weight: user.weight, goalWeight: user.goalWeight, profilePicture: user.profilePicture, createdAt: user.createdAt}});
     } catch (error) {
         res.status(500).json({success: false, message: 'Error fetching user', error: error instanceof Error ? error.message: 'Unknown error'});
     }

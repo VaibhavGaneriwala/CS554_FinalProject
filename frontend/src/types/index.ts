@@ -6,6 +6,7 @@ export interface User {
   age?: number;
   height?: number;
   weight?: number;
+  goalWeight?: number;
   profilePicture?: string;
   createdAt?: string;
 }
@@ -61,10 +62,12 @@ export interface WorkoutFormData {
   split: string;
   exercises: Exercise[];
   media?: File[];
+  removedMedia?: string[];
   date?: string;
   duration?: number;
   notes?: string;
 }
+
 
 
 export interface NutritionInfo {
@@ -132,6 +135,48 @@ export interface ProgressFormData {
   notes?: string;
 }
 
+export interface WeightProgress {
+  _id: string;
+  userId: string;
+  date: string;
+  weight: number;
+  photos?: string[];
+  notes?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface WeightProgressFormData {
+  date?: string;
+  weight: number;
+  photos?: File[];
+  notes?: string;
+}
+
+export interface PRExercise {
+  _id: string;
+  userId: string;
+  name: string;
+  unit: "lbs" | "reps" | "time";
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface PRProgress {
+  _id: string;
+  userId: string;
+  prExerciseId: string;
+  value: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface PRHistoryResponse {
+  exercise: PRExercise;
+  prs: PRProgress[];
+  current: PRProgress | null;
+}
+
 export interface UserPublic {
   id: string;
   firstName: string;
@@ -162,7 +207,7 @@ export interface Post {
   content: string;
   workoutId?: Workout;
   mealId?: Meal;
-  progressId?: Progress;
+  progressId?: WeightProgress | PRProgress;
   likes: string[];
   comments: Comment[];
   createdAt: string;
