@@ -16,6 +16,8 @@ const Meals: React.FC = () => {
     const [mealsUpdated, setMealsUpdated] = useState(false);
     const [editingMeal, setEditingMeal] = useState<Meal | null>(null);
 
+    const formatDailySummaryData = (value: number) => (Number.isFinite(value) ? value.toFixed(2) : '0.00');
+
     const loadMeals = useCallback(async () => {
         const res = await mealService.getMeals();
         setMeals(res.data?.meals || []);
@@ -109,22 +111,22 @@ const Meals: React.FC = () => {
                 <div className="mb-6 grid grid-cols-2 md:grid-cols-4 gap-4">
                     <div className="bg-blue-50 p-4 rounded">
                         <p className="text-sm text-gray-600">Calories</p>
-                        <p className="text-2xl font-bold">{totals.calories}</p>
+                        <p className="text-2xl font-bold">{formatDailySummaryData(totals.calories)}cal</p>
                     </div>
 
                     <div className="bg-green-50 p-4 rounded">
                         <p className="text-sm text-gray-600">Protein</p>
-                        <p className="text-2xl font-bold">{totals.protein}g</p>
+                        <p className="text-2xl font-bold">{formatDailySummaryData(totals.protein)}g</p>
                     </div>
 
                     <div className="bg-yellow-50 p-4 rounded">
                         <p className="text-sm text-gray-600">Carbs</p>
-                        <p className="text-2xl font-bold">{totals.carbs}g</p>
+                        <p className="text-2xl font-bold">{formatDailySummaryData(totals.carbs)}g</p>
                     </div>
 
                     <div className="bg-red-50 p-4 rounded">
                         <p className="text-sm text-gray-600">Fat</p>
-                        <p className="text-2xl font-bold">{totals.fat}g</p>
+                        <p className="text-2xl font-bold">{formatDailySummaryData(totals.fat)}g</p>
                     </div>
                 </div>
 
