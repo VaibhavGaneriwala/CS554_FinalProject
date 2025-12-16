@@ -98,6 +98,7 @@ export interface MealFormData {
   nutrition: NutritionInfo;
   mealType: "breakfast" | "lunch" | "dinner" | "snack";
   photos?: File[];
+  removedPhotos?: string[];
   date?: string;
 }
 
