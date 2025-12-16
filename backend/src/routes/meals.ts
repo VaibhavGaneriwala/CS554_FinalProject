@@ -1,4 +1,4 @@
-import express, { Request, Response } from 'express';
+import express, { Request, Response, NextFunction } from 'express';
 import { body, param } from 'express-validator';
 import { Meal } from '../models/index';
 import { authenticate } from '../middleware/auth';
@@ -154,7 +154,7 @@ router.get('/:mealId', authenticate, param('mealId').custom((value) => {
 router.put('/:mealId', authenticate, param('mealId').custom((value) => {
     if (!isValidObjectId(value)) throw new Error('Invalid meal ID');
     return true;
-}), mealValidation, handleValidationErrors, async (req: Request, res: Response): Promise<void> => {
+}), upload.array('photos', 5), mealValidation, handleValidationErrors, async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
         const { mealId } = req.params;
         const userId = req.user?.userId;
@@ -167,11 +167,33 @@ router.put('/:mealId', authenticate, param('mealId').custom((value) => {
             res.status(403).json({ success: false, message: 'Unauthorized to update this meal' });
             return;
         }
-        const updatedMeal = await Meal.findByIdAndUpdate(mealId, req.body, { new: true, runValidators: true });
+        const { name, description, nutrition, mealType, date } = req.body as any;
+        const nutritionData = typeof nutrition === 'string' ? JSON.parse(nutrition) : nutrition;
+
+        const update: any = {
+            ...(name !== undefined ? { name } : {}),
+            ...(description !== undefined ? { description } : {}),
+            ...(mealType !== undefined ? { mealType } : {}),
+            ...(date !== undefined ? { date } : {}),
+            ...(nutritionData !== undefined ? { nutrition: nutritionData } : {}),
+        };
+        const files = req.files as Express.Multer.File[] | undefined;
+        if (files && files.length > 0) {
+            const photoUrls: string[] = [];
+            for (const file of files) {
+                const fileName = minioUtils.generatefileName(file.originalname, userId!);
+                await minioUtils.uploadFile(fileName, file.buffer, file.mimetype);
+                const fileUrl = await minioUtils.getFileUrl(fileName);
+                photoUrls.push(fileUrl);
+            }
+            update.photos = [...(meal.photos || []), ...photoUrls];
+        }
+
+        const updatedMeal = await Meal.findByIdAndUpdate(mealId, update, { new: true, runValidators: true });
         await cacheUtils.delPattern(`meals:user:${userId}:*`);
         res.status(200).json({ success: true, message: 'Meal updated successfully', data: updatedMeal });
     } catch (error) {
-        res.status(500).json({ success: false, message: 'Error updating meal', error: error instanceof Error ? error.message : 'Unknown error' });
+        next(error);
     }
 });
 

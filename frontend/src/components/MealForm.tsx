@@ -80,7 +80,8 @@ const MealForm: React.FC<MealFormProps> = ({ onMealCreated, mealToEdit }) => {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
-        setError(null); try {
+        setError(null);
+        try {
             const data: MealFormData = {
                 name,
                 mealType,
@@ -90,7 +91,7 @@ const MealForm: React.FC<MealFormProps> = ({ onMealCreated, mealToEdit }) => {
                     carbs: Number(carbs),
                     fat: Number(fat),
                 },
-                photos: photos || undefined,
+                ...(photos && photos.length > 0 ? { photos } : {}),
             };
 
             if (mealToEdit) {
@@ -104,14 +105,20 @@ const MealForm: React.FC<MealFormProps> = ({ onMealCreated, mealToEdit }) => {
             setProtein(0);
             setCarbs(0);
             setFat(0);
-            setPhotos([]);
+            setPhotos(null);
             setPreview([]);
             setFoodQuery("");
             setFoodResults([]);
             onMealCreated();
         } catch (err) {
             console.error(err);
-            setError("Failed to log meal");
+            const msg =
+                (err as any)?.response?.data?.errors?.join?.(", ") ||
+                (err as any)?.response?.data?.error ||
+                (err as any)?.response?.data?.message ||
+                (err as any)?.message ||
+                "Failed to log meal";
+            setError(msg);
         } finally {
             setLoading(false);
         }

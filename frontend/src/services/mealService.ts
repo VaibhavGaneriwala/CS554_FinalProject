@@ -47,7 +47,27 @@ export const mealService = {
     },
 
     updateMeal: async (mealId: string, data: Partial<MealFormData>): Promise<ApiResponse<Meal>> => {
-        const response = await api.put<ApiResponse<Meal>>(`/meals/${mealId}`, data);
+        if (data.photos && data.photos.length > 0) {
+            const formData = new FormData();
+            if (data.name !== undefined) formData.append("name", data.name);
+            if (data.mealType !== undefined) formData.append("mealType", data.mealType);
+            if (data.description !== undefined) formData.append("description", data.description);
+            if (data.date !== undefined) formData.append("date", data.date);
+
+            if (data.nutrition) {
+                formData.append("nutrition[calories]", data.nutrition.calories.toString());
+                formData.append("nutrition[protein]", data.nutrition.protein.toString());
+                formData.append("nutrition[carbs]", data.nutrition.carbs.toString());
+                formData.append("nutrition[fat]", data.nutrition.fat.toString());
+            }
+
+            data.photos.forEach((file) => formData.append("photos", file));
+
+            const response = await api.put<ApiResponse<Meal>>(`/meals/${mealId}`, formData);
+            return response.data;
+        }
+        const { photos, ...jsonData } = data as any;
+        const response = await api.put<ApiResponse<Meal>>(`/meals/${mealId}`, jsonData);
         return response.data;
     },
 
