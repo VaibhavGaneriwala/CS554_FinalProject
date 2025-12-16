@@ -158,6 +158,39 @@ Images are stored in MinIO and served to the browser via the backend under:
 
 ---
 
+## Optional: EDAMAM Food Search API (Meals page)
+
+The **Food Search** feature uses Edamam’s Recipes API. If you don’t set the keys, food search will show an error like **“Missing Edamam API keys in environment variables”**. The rest of the app still works.
+
+### Get API credentials
+
+- Create an Edamam developer account and get:
+  - `EDAMAM_APP_ID`
+  - `EDAMAM_APP_KEY`
+- Optional (recommended by Edamam for tracking): `EDAMAM_ACCOUNT_USER` (any stable string, e.g. your email or username)
+
+### Set keys (Docker)
+
+Create or edit the root `.env` file (same one used for port overrides) and add:
+
+```env
+EDAMAM_APP_ID=your_app_id_here
+EDAMAM_APP_KEY=your_app_key_here
+EDAMAM_ACCOUNT_USER=your_email_or_username_here
+```
+
+Then restart containers:
+
+```bash
+docker compose up --build
+```
+
+### Set keys (local backend)
+
+Add the same variables to `backend/.env`, then restart `npm run dev`.
+
+---
+
 ## Running locally (dev mode)
 
 If you’re not comfortable installing MongoDB/Redis/MinIO locally, the easiest “local dev” setup is:
