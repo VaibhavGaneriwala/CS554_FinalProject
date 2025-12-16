@@ -90,11 +90,19 @@ const Progress = mongoose.model('Progress', ProgressSchema);
 const Post = mongoose.model('Post', PostSchema);
 
 const seedData = async () => {
+  let exitCode = 0;
   try {
     console.log('Starting database seed...');
 
     await mongoose.connect(MONGODB_URI);
     console.log('Connected to MongoDB');
+
+    const forceReseed = String(process.env.SEED_FORCE || '').toLowerCase() === 'true';
+    const existingUsers = await User.countDocuments();
+    if (existingUsers > 0 && !forceReseed) {
+      console.log(`Seed skipped: database already has ${existingUsers} user(s). Set SEED_FORCE=true to wipe + reseed.`);
+      return;
+    }
 
     await User.deleteMany({});
     await Workout.deleteMany({});
@@ -517,14 +525,18 @@ const seedData = async () => {
 
     console.log('Database seeded successfully!');
     console.log(`Summary: ${users.length} users, ${workouts.length} workouts, ${meals.length} meals, ${progressEntries.length} progress entries, ${posts.length} posts`);
-    console.log('Default password for all users: password123');
+    console.log('Default password for all users: PasswordPassword@123');
 
   } catch (error) {
+    exitCode = 1;
     console.error('Error seeding database:', error);
   } finally {
-    await mongoose.connection.close();
+    try {
+      await mongoose.connection.close();
+    } catch (e) {
+    }
     console.log('Disconnected from MongoDB');
-    process.exit(0);
+    process.exit(exitCode);
   }
 };
 

@@ -31,7 +31,7 @@ This project is designed to run via Docker Compose (MongoDB + Redis + MinIO + ba
 From the repo root:
 
 ```bash
-docker-compose up --build
+docker compose up --build
 ```
 
 Then open:
@@ -39,6 +39,18 @@ Then open:
 - **Frontend**: `http://localhost:3001`
 - **Backend health**: `http://localhost:3000/health`
 - **MinIO Console**: `http://localhost:9001`
+
+### Login (seeded data)
+
+On the **first run**, the database is automatically seeded with sample data.
+
+- **Email**: `john@example.com`
+- **Password**: `PasswordPassword@123`
+
+### Stop / restart
+
+- Stop containers: press `Ctrl+C` in the terminal running `docker compose up`
+- Stop containers (detached mode): `docker compose down`
 
 ---
 
@@ -70,57 +82,33 @@ CORS_ORIGIN=http://localhost:3003
 REACT_APP_API_URL=http://localhost:3002/api
 ```
 
-**Note**: If you change `BACKEND_PORT` or `FRONTEND_PORT`, make sure to also update `CORS_ORIGIN` and `REACT_APP_API_URL` accordingly.
+**Note**: If you change `BACKEND_PORT` or `FRONTEND_PORT`, make sure to also update `CORS_ORIGIN` and `REACT_APP_API_URL` accordingly. If you change the backend port, also set `PUBLIC_BACKEND_BASE_URL` (used for generating public file URLs).
 
 ### Backend `.env` (when running backend outside Docker)
 
 Separately from Docker Compose port overrides, you may have a `backend/.env` for the backend runtime config when you run the backend locally (e.g., `npm run dev` inside `backend/`).
 
-Your current `backend/.env` includes keys like `PORT`, `REDIS_HOST`, `MINIO_*`, and `CORS_ORIGIN`. Do **not** commit secrets (JWT/third‑party API keys). Here’s a safe template matching your file:
+For **Docker Compose**, you typically do **not** need `backend/.env` (Compose supplies env vars).
 
-```env
-# Server Configuration
-PORT=5000
-NODE_ENV=development
+For **local backend dev**, the backend expects at minimum:
 
-# MongoDB Configuration
-# (In this repo the backend expects MONGODB_URI in Docker; use whichever your code is wired to.)
-MONGODB_URI=mongodb://localhost:27017/cs554-finalproject
+- `MONGO_URI` (required)
+- `REDIS_HOST` (required; defaults to empty string)
+- `MINIO_ENDPOINT` (required if you use uploads)
+- `CORS_ORIGIN` (should match where the frontend is running)
 
-# Redis Configuration
-REDIS_HOST=localhost
-REDIS_PORT=6379
-
-# JWT Configuration
-JWT_SECRET=<your_jwt_secret>
-JWT_EXPIRES_IN=7d
-
-# MinIO Configuration
-MINIO_ENDPOINT=localhost
-MINIO_PORT=9000
-MINIO_ACCESS_KEY=minioadmin
-MINIO_SECRET_KEY=minioadmin
-MINIO_USE_SSL=false
-MINIO_BUCKET_NAME=cs554-finalproject
-
-# External API Keys
-EDAMAM_APP_ID=<your_edamam_app_id>
-EDAMAM_APP_KEY=<your_edamam_app_key>
-
-# CORS
-CORS_ORIGIN=http://localhost:3001
-```
-
-If you change the backend `PORT`, make sure your frontend `REACT_APP_API_URL` points to the same port.
+See the “Running locally” section below for a copy/paste `backend/.env` example.
 
 ---
 
 ## Seed data (important)
 
-The backend container runs the seed script on startup (see `backend/docker-entrypoint.sh`). That means:
+The `docker-compose.yml` includes a dedicated **one-shot** `seed` service that runs `backend/seed.js` before the backend starts.
 
-- **Every time the backend container starts, the DB is reseeded** (existing users/posts/etc are cleared and recreated).
-- If you restart containers, your previously created users/data may disappear.
+### What happens on `docker compose up`
+
+- **If the database is empty**: `seed` inserts sample data, then exits successfully.
+- **If the database already has users**: `seed` **skips** (so your data is preserved).
 
 ### Seeded accounts
 
@@ -128,12 +116,21 @@ The seed script creates several users (e.g. `john@example.com`, `jane@example.co
 
 - **Password for all seeded users**: `PasswordPassword@123`
 
-### Stop reseeding on every container start (recommended once you’re developing)
+### Force wipe + reseed (optional)
 
-Edit `backend/docker-entrypoint.sh` and remove (or comment out) the seed step:
+If you want to wipe the DB and reseed from scratch:
 
-```sh
-npm run seed
+```bash
+docker compose run --rm -e SEED_FORCE=true seed
+```
+
+### Reset everything (nuclear option)
+
+This deletes the Mongo/Redis/MinIO volumes (all stored data), then reseeds on next `up`:
+
+```bash
+docker compose down -v
+docker compose up --build
 ```
 
 ---
@@ -161,19 +158,70 @@ Images are stored in MinIO and served to the browser via the backend under:
 
 ---
 
-## Running locally (without Docker)
+## Running locally (dev mode)
 
-You’ll need MongoDB, Redis, and MinIO running somewhere reachable, then:
+If you’re not comfortable installing MongoDB/Redis/MinIO locally, the easiest “local dev” setup is:
 
-### Backend
+- Run **MongoDB + Redis + MinIO** in Docker
+- Run **backend + frontend** on your machine
+
+### 1) Start dependencies (Docker)
+
+From the repo root:
+
+```bash
+docker compose up -d mongodb redis minio
+```
+
+### 2) Backend (local)
+
+Create `backend/.env` (example):
+
+```env
+# Core
+NODE_ENV=development
+PORT=3000
+
+# Mongo
+MONGO_URI=mongodb://localhost:27017/cs554-finalproject
+
+# Redis (required - redisHost defaults to empty string)
+REDIS_HOST=127.0.0.1
+REDIS_PORT=6379
+
+# MinIO
+MINIO_ENDPOINT=127.0.0.1
+MINIO_PORT=9000
+MINIO_ACCESS_KEY=minioadmin
+MINIO_SECRET_KEY=minioadmin
+MINIO_USE_SSL=false
+MINIO_BUCKET_NAME=cs554-finalproject
+
+# Used for building public file URLs served to the browser
+PUBLIC_BACKEND_BASE_URL=http://localhost:3000
+
+# Auth (safe defaults exist, but you can override)
+JWT_SECRET=dev-secret-change-me
+JWT_EXPIRES_IN=7d
+
+# CORS (frontend URL)
+CORS_ORIGIN=http://localhost:3001
+```
+
+Then run:
 
 ```bash
 cd backend
 npm install
+npm run seed
 npm run dev
 ```
 
-### Frontend
+Notes:
+
+- `npm run seed` is **idempotent**. If you need to force a reseed locally: `SEED_FORCE=true npm run seed`
+
+### 3) Frontend (local)
 
 ```bash
 cd frontend
@@ -181,6 +229,24 @@ npm install
 npm start
 ```
 
-Make sure `REACT_APP_API_URL` points at the backend (example: `http://localhost:3000/api`).
+Make sure the frontend points to the backend API:
+
+- Create `frontend/.env`:
+
+```env
+REACT_APP_API_URL=http://localhost:3000/api
+```
+
+Then open the URL that `npm start` prints (often `http://localhost:3001` if the backend is already using 3000).
+
+---
+
+## Troubleshooting
+
+- **Ports already in use**: change the ports in the root `.env` (Docker) or update `PORT` / `REACT_APP_API_URL` (local).
+- **“Seed skipped…” but you want fresh data**:
+  - Docker: `docker compose run --rm -e SEED_FORCE=true seed`
+  - Local: `cd backend && SEED_FORCE=true npm run seed`
+- **Blank/failed image uploads**: ensure MinIO is running and `MINIO_*` env vars match where it’s reachable.
 
 ---

@@ -75,6 +75,8 @@ services:
         condition: service_started
       minio:
         condition: service_started
+      seed:
+        condition: service_completed_successfully
     networks:
       - fitness-network
     volumes:
@@ -87,7 +89,6 @@ services:
       dockerfile: Dockerfile
     container_name: backend-seed
     restart: "no"
-    profiles: ["seed"]
     environment:
       NODE_ENV: development
       MONGO_URI: mongodb://mongodb:27017/cs554-finalproject
