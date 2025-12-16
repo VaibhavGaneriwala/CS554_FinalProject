@@ -85,9 +85,9 @@ router.put(
         body('lastName').optional().trim().isLength({min: 2, max: 50}).withMessage('Last name must be between 2 and 50 characters'),
         body('age').optional().isInt({min: 16, max: 120}).withMessage('Age must be between 16 and 120'),
         body('height').optional().isFloat({min: 24, max: 96}).withMessage('Height must be between 2 and 8 feet'),
-        body('weight').optional().isFloat({min: 20, max: 500}).withMessage('Weight must be between 20 and 500kg'),
+        body('weight').optional().isFloat({min: 44, max: 1100}).withMessage('Weight must be between 44 and 1100 lbs'),
         body('profilePicture').optional().isURL().withMessage('Invalid profile picture URL'),
-        body('goalWeight').optional().isFloat({min: 20, max: 500}).withMessage('Goal weight must be between 20 and 500kg'),
+        body('goalWeight').optional().isFloat({min: 44, max: 1100}).withMessage('Goal weight must be between 44 and 1100 lbs'),
     ], handleValidationErrors, async (req: Request, res: Response): Promise<void> => {
         try {
             const {firstName, lastName, age, height, weight} = req.body;
@@ -169,7 +169,7 @@ router.post(
 router.put('/goal-weight',
   authenticate,
   [
-    body('goalWeight').isFloat({ min: 20, max: 500 }).withMessage('Goal weight must be between 20 and 500'),
+    body('goalWeight').isFloat({ min: 44, max: 1100 }).withMessage('Goal weight must be between 44 and 1100 lbs'),
   ], handleValidationErrors, async (req: Request, res: Response): Promise<void> => {
     try {
       const userId = req.user?.userId;

@@ -1,5 +1,5 @@
-import React, { useEffect, useState, useCallback } from "react";
-import { useNavigate, Link } from 'react-router-dom';
+import React, { useEffect, useState } from "react";
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from "../context/AuthContext";
 import Navbar from "../components/Navbar";
 import { userService } from "../services/userService";
@@ -13,16 +13,21 @@ const Progress: React.FC = () => {
     const {user, logout, updateUser} = useAuth();
     const navigate = useNavigate();
 
+    const MIN_WEIGHT_LBS = 0.1;
+    const MAX_WEIGHT_LBS = 1100;
+    const MIN_GOAL_WEIGHT_LBS = 44;
+
     const [progressType, setProgressType] = useState<"weight" | "pr">("weight");
     const [weightEntries, setWeightEntries] = useState<any[]>([]);
     const [prExercises, setPRExercises] = useState<any[]>([]);
-    const [prHistory, setPRHistory] = useState<Record<string, any[]>>({});
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
     const [goalWeight, setGoalWeight] = useState<number | null>(null);
     const [goalInput, setGoalInput] = useState("");
     const [savingGoal, setSavingGoal] = useState(false);
+    const [goalBanner, setGoalBanner] = useState<{entryId: string; goal: number} | null>(null);
+    const [dismissedGoalBanner, setDismissedGoalBanner] = useState(false);
 
     const [newWeight, setNewWeight] = useState("");
     const [saving, setSaving] = useState(false);
@@ -73,6 +78,11 @@ const Progress: React.FC = () => {
     }, [user]);
 
     useEffect(() => {
+        setDismissedGoalBanner(false);
+        setGoalBanner(null);
+    }, [goalWeight]);
+
+    useEffect(() => {
         if (!selectedExercise) return;
         const fetchHistory = async () => {
             try {
@@ -104,12 +114,17 @@ const Progress: React.FC = () => {
 
     const handleSaveGoalWeight = async () => {
         if (!goalInput) return;
+        const goal = Number(goalInput);
+        if (Number.isNaN(goal) || goal < MIN_GOAL_WEIGHT_LBS || goal > MAX_WEIGHT_LBS) {
+            setError(`Goal weight must be between ${MIN_GOAL_WEIGHT_LBS} and ${MAX_WEIGHT_LBS} lbs`);
+            return;
+        }
 
         try {
             setSavingGoal(true);
 
             const response = await userService.updateWeightGoal(
-                Number(goalInput)
+                goal
             );
 
             if (response.data && user) {
@@ -117,6 +132,14 @@ const Progress: React.FC = () => {
                     ...user,
                     goalWeight: response.data.goalWeight,
                 });
+            }
+
+            const latestEntryId = weightEntries.length > 0 ? String(weightEntries[0]?._id ?? "") : "";
+            const latestWeight = weightEntries.length > 0 ? Number(weightEntries[0]?.weight) : null;
+            const EPSILON = 0.05;
+            if (latestEntryId && latestWeight !== null && !Number.isNaN(latestWeight) && Math.abs(latestWeight - goal) <= EPSILON) {
+                setGoalBanner({ entryId: latestEntryId, goal });
+                setDismissedGoalBanner(false);
             }
 
             alert("Goal weight updated!");
@@ -129,11 +152,33 @@ const Progress: React.FC = () => {
 
     const handleAddWeight = async () => {
         if (!newWeight) return;
+        const weight = Number(newWeight);
+        if (Number.isNaN(weight) || weight < MIN_WEIGHT_LBS || weight > MAX_WEIGHT_LBS) {
+            setError(`Weight must be between ${MIN_WEIGHT_LBS} and ${MAX_WEIGHT_LBS} lbs`);
+            return;
+        }
         try {
             setSaving(true);
-            const res = await weightProgressService.createWeightProgress({weight: Number(newWeight)});
+            const prevLatestWeight = weightEntries.length > 0 ? Number(weightEntries[0]?.weight) : null;
+            const res = await weightProgressService.createWeightProgress({weight});
             if (res.data) {
                 setWeightEntries(prev => [res.data, ...prev]);
+
+                if (goalWeight !== null) {
+                    const goal = Number(goalWeight);
+                    const nextWeight = Number(res.data.weight);
+                    const EPSILON = 0.05;
+                    const reachedExactly = Number.isFinite(nextWeight) && Math.abs(nextWeight - goal) <= EPSILON;
+                    const crossed =
+                        prevLatestWeight !== null &&
+                        Number.isFinite(prevLatestWeight) &&
+                        ((prevLatestWeight > goal && nextWeight < goal) || (prevLatestWeight < goal && nextWeight > goal));
+
+                    if ((reachedExactly || crossed) && res.data._id) {
+                        setGoalBanner({ entryId: String(res.data._id), goal });
+                        setDismissedGoalBanner(false);
+                    }
+                }
             }
             setNewWeight("");
         } catch (err: any) {
@@ -198,6 +243,12 @@ const Progress: React.FC = () => {
         },
     };
 
+    const showGoalBanner =
+        !dismissedGoalBanner &&
+        goalBanner !== null &&
+        goalWeight !== null &&
+        goalBanner.goal === Number(goalWeight);
+
     const handleAddExercise = async () => {
         if (!newWorkout) return;
         try {
@@ -248,12 +299,15 @@ const Progress: React.FC = () => {
     const isValidPRValue = (unit: PRExercise["unit"], value: string): boolean => {
         if (!value.trim()) return false;
         switch (unit) {
-            case "time":
-                return TIME_REGEX.test(value);
+            case "time": {
+                if (!TIME_REGEX.test(value)) return false;
+                const [h, m, s] = value.split(":").map(Number);
+                const totalSeconds = h * 3600 + m * 60 + s;
+                return Number.isFinite(totalSeconds) && totalSeconds > 0;
+            }
             case "reps":
                 return Number.isInteger(Number(value)) && Number(value) > 0;
             case "lbs":
-            case "kg":
                 return !isNaN(Number(value)) && Number(value) > 0;
             default:
                 return false;
@@ -367,10 +421,20 @@ const Progress: React.FC = () => {
                     </div>
                 </div>
 
-                {/* Weight Section */}
+                {error && (
+                    <div className="mb-4 max-w-6xl mx-auto px-4">
+                        <div className="p-4 bg-red-50 border-l-4 border-red-500 rounded-lg flex items-center justify-between gap-4">
+                            <p className="text-sm text-red-700 flex-1">{error}</p>
+                            <button onClick={() => setError(null)} aria-label="Dismiss error" className="text-red-600 hover:text-red-800 transition font-semibold text-lg leading-none">
+                                ×
+                            </button>
+                        </div>
+                    </div>
+                )}
+
                 {progressType === "weight" && (
                     <div className="max-w-6xl mx-auto px-4 space-y-6">
-                        {/* Header */}
+                        {}
                         <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-3">
                             <div>
                                 <h2 className="text-2xl font-semibold">Weight Progress</h2>
@@ -381,16 +445,32 @@ const Progress: React.FC = () => {
                                 )}
                             </div>
 
-                            {/* Goal Setter */}
+                            {}
                             <div className="flex items-center gap-2">
-                                <input type="number" placeholder="Goal (lbs)" value={goalInput} onChange={(e) => setGoalInput(e.target.value)} className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 w-32"/>
+                                <input type="number" min={MIN_GOAL_WEIGHT_LBS} max={MAX_WEIGHT_LBS} step="0.1" placeholder="Goal (lbs)" value={goalInput} onChange={(e) => setGoalInput(e.target.value)} className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 w-32"/>
                                 <button onClick={handleSaveGoalWeight} disabled={!goalInput || savingGoal} className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded transition font-medium">
                                     {savingGoal ? "Saving..." : "Save Goal"}
                                 </button>
                             </div>
                         </div>
 
-                        {/* Chart Card */}
+                        {showGoalBanner && (
+                            <div className="bg-green-50 border border-green-200 rounded-lg p-4 flex items-center justify-between gap-4">
+                                <p className="text-sm text-green-800">
+                                    <span className="font-semibold">Goal achieved!</span>{" "}
+                                    You’ve reached your goal weight of <span className="font-semibold">{goalWeight} lbs</span>.
+                                </p>
+                                <button
+                                    onClick={() => setDismissedGoalBanner(true)}
+                                    aria-label="Dismiss goal achieved message"
+                                    className="text-green-700 hover:text-green-900 transition font-semibold text-lg leading-none"
+                                >
+                                    ×
+                                </button>
+                            </div>
+                        )}
+
+                        {}
                         {weightEntries.length > 0 && (
                             <div className="bg-white border border-gray-300 rounded-lg p-6 shadow-sm">
                                 <div className="max-w-3xl">
@@ -399,17 +479,17 @@ const Progress: React.FC = () => {
                             </div>
                         )}
 
-                        {/* Add Weight Card */}
+                        {}
                         <div className="bg-white border border-gray-300 rounded-lg p-6 shadow-sm">
                             <div className="flex items-center gap-2">
-                                <input type="number" placeholder="Enter weight (lbs)" value={newWeight} onChange={(e) => setNewWeight(e.target.value)} className="px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 w-56"/>
+                                <input type="number" min={MIN_WEIGHT_LBS} max={MAX_WEIGHT_LBS} step="0.1" placeholder="Enter weight (lbs)" value={newWeight} onChange={(e) => setNewWeight(e.target.value)} className="px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 w-56"/>
                                 <button onClick={handleAddWeight} disabled={!newWeight || saving} className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded transition font-medium">
                                     {saving ? "Saving..." : "Add"}
                                 </button>
                             </div>
                         </div>
 
-                        {/* Entries List */}
+                        {}
                         {weightEntries.length === 0 ? (
                             <div className="text-center py-10 bg-white border border-gray-300 rounded-lg">
                                 <p className="text-gray-600">
@@ -435,7 +515,7 @@ const Progress: React.FC = () => {
                 )}
                 {progressType === "pr" && (
                     <div>
-                        {/* PR Header */}
+                        {}
                         <div className="mb-6 px-6 md:px-8">
                             <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-3">
                                 <div>
@@ -448,7 +528,7 @@ const Progress: React.FC = () => {
                                     )}
                                 </div>
 
-                                {/* Add Exercise */}
+                                {}
                                 <div className="flex items-center gap-2">
                                     <input value={newWorkout} onChange={(e) => setNewWorkout(e.target.value)} placeholder="New exercise" className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"/>
                                     <button onClick={handleAddExercise}disabled={!newWorkout || savingPR} className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded transition-colors font-medium">
@@ -458,39 +538,29 @@ const Progress: React.FC = () => {
                             </div>
                         </div>
 
-                        {/* Error */}
-                        {error && (
-                            <div className="mb-4 p-4 bg-red-50 border-l-4 border-red-500 rounded-lg flex items-center justify-between gap-4">
-                                <p className="text-sm text-red-700 flex-1">{error}</p>
-                                <button onClick={() => setError(null)} aria-label="Dismiss error" className="text-red-600 hover:text-red-800 transition font-semibold text-lg leading-none">
-                                    ×
-                                </button>
-                            </div>
-                        )}
-
-                        {/* Loading */}
+                        {}
                         {loading ? (
                             <div className="text-center py-10">
                                 <p className="text-gray-600">Loading PRs...</p>
                             </div>
                         ) : prExercises.length === 0 ? (
-                            /* Empty State */
+                            
                             <div className="text-center py-10 bg-white border border-gray-300 rounded-lg">
                                 <p className="text-gray-600 mb-4">
                                     No PR exercises yet. Add your first lift to get started!
                                 </p>
                             </div>
                         ) : (
-                            /* PR Cards */
+                            
                             <div className="px-6 md:px-8">
                                 <div className="space-y-4">
                                     {prExercises.map((exercise) => {
                                         const isSelected = selectedExercise?._id === exercise._id;
                                         return (
                                             <div key={exercise._id} className={`bg-white border border-gray-300 rounded-lg p-6 shadow-sm ${isSelected ? "ring-2 ring-blue-500" : ""}`}>
-                                                {/* Card Header */}
+                                                {}
                                                 <div className="flex justify-between items-start mb-4">
-                                                    {/* Unit Select */}
+                                                    {}
                                                     <div>
                                                         <h3 className="text-xl font-semibold mb-1">
                                                             {exercise.name}
@@ -499,14 +569,13 @@ const Progress: React.FC = () => {
                                                             <span>Unit:</span>
                                                             <select value={exercise.unit} disabled={savingPR} onChange={(e) => handleUpdateExerciseUnit(exercise, e.target.value as PRExercise["unit"])} className="px-2 py-1 border border-gray-300 rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-blue-500">
                                                                 <option value="lbs">lbs</option>
-                                                                <option value="kg">kg</option>
                                                                 <option value="reps">reps</option>
                                                                 <option value="time">time</option>
                                                             </select>
                                                         </div>
                                                     </div>
                                                     
-                                                    {/* View and Delete Button */}
+                                                    {}
                                                     <div className="flex gap-2">
                                                         <button onClick={() => handleViewExercise(exercise)} className="px-3 py-2 text-sm bg-gray-100 hover:bg-gray-200 rounded transition">
                                                             {isSelected ? "Viewing" : "View"}
@@ -517,7 +586,7 @@ const Progress: React.FC = () => {
                                                     </div>
                                                 </div>
 
-                                                {/* Expanded Content */}
+                                                {}
                                                 {isSelected && prHistoryData && (
                                                     <div>
                                                         {prHistoryData.current && (
@@ -530,14 +599,14 @@ const Progress: React.FC = () => {
                                                             </p>
                                                         )}
 
-                                                        {/* Chart */}
+                                                        {}
                                                         {prHistoryData.prs.length > 0 && (
                                                             <div className="mb-6 max-w-2xl">
                                                                 <Line data={prChartData!} />
                                                             </div>
                                                         )}
 
-                                                        {/* Set PR */}
+                                                        {}
                                                         <div className="flex items-center gap-2 mb-4">
                                                             <input value={newPRValue} onChange={(e) => setNewPRValue(e.target.value)} placeholder={exercise.unit === "time" ? "hh:mm:ss" : `New PR (${exercise.unit})`} inputMode={exercise.unit === "time" ? "text" : "numeric"}/>
                                                             <button onClick={handleSetPR} disabled={!newPRValue || savingPR} className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded transition-colors font-medium">
@@ -545,7 +614,7 @@ const Progress: React.FC = () => {
                                                             </button>
                                                         </div>
 
-                                                        {/* History */}
+                                                        {}
                                                         <ul className="text-sm text-gray-700 space-y-2">
                                                             {prHistoryData.prs.map((p) => (
                                                                 <li key={p._id} className="flex items-center gap-2">

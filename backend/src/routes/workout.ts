@@ -126,7 +126,7 @@ const workoutValidation = [
 
   body("exercises.*.weight")
     .isFloat({ min: 0, max: 1000 })
-    .withMessage("Weight must be between 0 and 1000kg"),
+    .withMessage("Weight must be between 0 and 1000 lbs"),
 
   body("date").optional().isISO8601().withMessage("Invalid date format"),
 

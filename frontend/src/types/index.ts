@@ -157,7 +157,7 @@ export interface PRExercise {
   _id: string;
   userId: string;
   name: string;
-  unit: "lbs" | "kg" | "reps" | "time";
+  unit: "lbs" | "reps" | "time";
   createdAt: string;
   updatedAt: string;
 }

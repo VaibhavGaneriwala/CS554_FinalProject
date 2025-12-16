@@ -14,7 +14,7 @@ const registerValidation = [
     body('password').trim().isLength({min: 16}).withMessage('Password must be at least 16 characters long').matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{16,}$/).withMessage('Password must include uppercase, lowercase, number, and symbol'),
     body('age').optional().isInt({min: 16, max: 120}).withMessage('Age must be between 16 and 120'),
     body('height').optional().isFloat({min: 24, max: 96}).withMessage('Height must be between 2 and 8 feet'),
-    body('weight').optional().isFloat({min: 20, max: 500}).withMessage('Weight must be between 20 and 500kg'),
+    body('weight').optional().isFloat({min: 44, max: 1100}).withMessage('Weight must be between 44 and 1100 lbs'),
 ];
 
 const loginValidation = [

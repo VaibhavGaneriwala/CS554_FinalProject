@@ -25,32 +25,32 @@ const upload = multer({
 const progressValidation = [
     body('type').isIn(['weight', 'pr', 'measurement', 'photo']).withMessage('Invalid progress type'),
     body('date').optional().isISO8601().withMessage('Invalid date format'),
-    body('weight').if(body('type').equals('weight')).isFloat({min: 0, max: 500}).withMessage('Invalid weight value'),
+    body('weight').if(body('type').equals('weight')).isFloat({min: 0.1, max: 1100}).withMessage('Invalid weight value'),
     body('exercise').if(body('type').equals('pr')).trim().notEmpty().withMessage('Exercise name is required'),
     body('prValue').if(body('type').equals('pr')).isFloat({min: 0, max: 1000}).withMessage('Invalid PR value')
 ];
 
 const weightProgressValidation = [
     body('date').optional().isISO8601().withMessage('Invalid date format'),
-    body('weight').isFloat({ min: 0, max: 500 }).withMessage('Invalid weight value'),
+    body('weight').isFloat({ min: 0.1, max: 1100 }).withMessage('Invalid weight value'),
 ];
 
 const prExerciseValidation = [
     body('name').trim().notEmpty().withMessage('Exercise name is required'),
-    body('unit').optional().isIn(['lbs', 'kg', 'reps', 'time']).withMessage('Invalid unit'),
+    body('unit').optional().isIn(['lbs', 'reps', 'time']).withMessage('Invalid unit'),
 ];
 
 const prExerciseUpdateValidation = [
     body('name').optional().trim().notEmpty().withMessage('Exercise name cannot be empty'),
-    body('unit').optional().isIn(['lbs', 'kg', 'reps', 'time']).withMessage('Invalid unit'),
+    body('unit').optional().isIn(['lbs', 'reps', 'time']).withMessage('Invalid unit'),
 ];
 
 const prProgressValidation = [
     body('prExerciseId').custom(isValidObjectId).withMessage('Invalid PR exercise ID'),
-    body('value').isFloat({ min: 0 }).withMessage('Invalid PR value'),
+    body('value').isFloat({ min: 0.0001 }).withMessage('Invalid PR value'),
 ];
 
-//WeightProgress Routes
+
 router.post('/weight', authenticate, upload.array('photos', 5), weightProgressValidation, handleValidationErrors, async (req: Request, res: Response): Promise<void> => {
     try {
         const { date, weight, notes } = req.body;
@@ -170,7 +170,7 @@ router.delete('/weight/:progressId', authenticate, param('progressId').custom(is
     }
 });
 
-//PRExercises Routes
+
 router.get('/pr/exercises', authenticate, async (req: Request, res: Response): Promise<void> => {
     try {
         const userId = req.user!.userId;
@@ -242,7 +242,7 @@ router.delete('/pr/exercises/:exerciseId', authenticate, param('exerciseId').cus
     }
 });
 
-//PRProgress Routes
+
 router.get('/pr/progress/:exerciseId', authenticate, param('exerciseId').custom(isValidObjectId), handleValidationErrors, async (req: Request, res: Response): Promise<void> => {
     try {
         const {exerciseId} = req.params;
@@ -268,6 +268,19 @@ router.post('/pr/progress', authenticate, prProgressValidation, handleValidation
             res.status(404).json({success: false, message: 'PR exercise not found'});
             return;
         }
+
+        const numericValue = Number(value);
+        if (!Number.isFinite(numericValue) || numericValue <= 0) {
+            res.status(400).json({ success: false, message: 'PR value must be greater than 0' });
+            return;
+        }
+        if (exercise.unit === 'reps' || exercise.unit === 'time') {
+            if (!Number.isInteger(numericValue)) {
+                res.status(400).json({ success: false, message: 'PR value must be a whole number' });
+                return;
+            }
+        }
+
         const pr = await PRProgress.create({userId, prExerciseId, value});
         await cacheUtils.delPattern(`weight-progress:${userId}:*`);
         res.status(201).json({success: true, message: 'PR recorded', data: pr});
@@ -292,7 +305,7 @@ router.delete('/pr/progress/:prId', authenticate, param('prId').custom(isValidOb
     }
 });
 
-//Progress Routes
+
 router.post('/', authenticate, upload.array('photos', 5), progressValidation, handleValidationErrors, async (req: Request, res: Response): Promise<void> => {
     try {
         const {type, date, weight, exercise, prValue, measurement, notes} = req.body;

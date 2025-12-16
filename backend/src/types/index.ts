@@ -82,7 +82,7 @@ export interface IProgress extends Document {
 }
 
 export interface IWeightProgress extends Document {
-  _id: string;
+  _id: Types.ObjectId;
   userId: string;
   date: Date;
   weight: number;
@@ -93,16 +93,16 @@ export interface IWeightProgress extends Document {
 }
 
 export interface IPRExercise extends Document {
-  _id: string;
+  _id: Types.ObjectId;
   userId: string;
   name: string;
-  unit: "lbs" | "kg" | "reps" | "time";
+  unit: "lbs" | "reps" | "time";
   createdAt: Date;
   updatedAt: Date;
 }
 
 export interface IPRProgress extends Document {
-  _id: string;
+  _id: Types.ObjectId;
   userId: string;
   prExerciseId: string;
   value: number;

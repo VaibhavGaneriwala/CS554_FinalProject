@@ -21,7 +21,7 @@ const Dashboard: React.FC = () => {
     }
   }, []);
 
-  //const justRegistered = localStorage.getItem("justRegistered") === "true";
+  
 
   return (
     <>

@@ -32,8 +32,8 @@ const ProgressSchema = new Schema<IProgress>(
         },
         weight: {
             type: Number,
-            min: [0, 'Weight must be at least 0'],
-            max: [500, 'Weight cannot exceed 500kg'],
+            min: [0.1, 'Weight must be greater than 0'],
+            max: [1100, 'Weight cannot exceed 1100 lbs'],
             required: function (this: IProgress){return this.type === 'weight';},
         },
         exercise: {
@@ -43,7 +43,7 @@ const ProgressSchema = new Schema<IProgress>(
         },
         prValue: {
             type: Number,
-            min: [0, 'PR value must be at least 0'],
+            min: [0.0001, 'PR value must be greater than 0'],
             max: [100, 'PR value cannot exceed 100'],
             required: function (this: IProgress){return this.type === 'pr';},
         },
@@ -89,8 +89,8 @@ const WeightProgressSchema = new Schema<IWeightProgress>(
         },
         weight: {
             type: Number,
-            min: [0, 'Weight must be at least 0'],
-            max: [500, 'Weight cannot exceed 500kg'],
+            min: [0.1, 'Weight must be greater than 0'],
+            max: [1100, 'Weight cannot exceed 1100 lbs'],
             required: [true, 'Weight is required'],
         },
         photos: {
@@ -123,7 +123,7 @@ const PRExerciseSchema = new Schema<IPRExercise>(
         },
         unit: {
             type: String,
-            enum: ['lbs', 'kg', 'reps', 'time'],
+            enum: ['lbs', 'reps', 'time'],
             default: 'lbs',
         },
     },
@@ -149,7 +149,7 @@ const PRProgressSchema = new Schema<IPRProgress>(
         value: {
             type: Number,
             required: [true, 'PR value is required'],
-            min: [0, 'PR value must be at least 0'],
+            min: [0.0001, 'PR value must be greater than 0'],
         },
     },
     { timestamps: true }
