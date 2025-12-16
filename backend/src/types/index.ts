@@ -9,6 +9,7 @@ export interface IUser extends Document {
   age?: number;
   height?: number;
   weight?: number;
+  goalWeight?: number;
   profilePicture?: string;
   createdAt: Date;
   updatedAt: Date;
@@ -76,6 +77,35 @@ export interface IProgress extends Document {
   };
   photos?: string[];
   notes?: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface IWeightProgress extends Document {
+  _id: string;
+  userId: string;
+  date: Date;
+  weight: number;
+  photos?: string[];
+  notes?: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface IPRExercise extends Document {
+  _id: string;
+  userId: string;
+  name: string;
+  unit: "lbs" | "kg" | "reps" | "time";
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface IPRProgress extends Document {
+  _id: string;
+  userId: string;
+  prExerciseId: string;
+  value: number;
   createdAt: Date;
   updatedAt: Date;
 }

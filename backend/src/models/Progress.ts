@@ -1,5 +1,5 @@
 import mongoose, {Schema} from 'mongoose';
-import {IProgress} from '../types';
+import {IProgress, IWeightProgress, IPRExercise, IPRProgress} from '../types';
 
 const MeasurementSchema = new Schema(
     {
@@ -74,5 +74,91 @@ const ProgressSchema = new Schema<IProgress>(
 ProgressSchema.index({UserId: 1, date: -1});
 ProgressSchema.index({type: 1});
 
+const WeightProgressSchema = new Schema<IWeightProgress>(
+    {
+        userId: {
+            type: String,
+            required: [true, 'User ID is required'],
+            ref: 'User',
+            index: true,
+        },
+        date: {
+            type: Date,
+            required: [true, 'Date is required'],
+            default: Date.now,
+        },
+        weight: {
+            type: Number,
+            min: [0, 'Weight must be at least 0'],
+            max: [500, 'Weight cannot exceed 500kg'],
+            required: [true, 'Weight is required'],
+        },
+        photos: {
+            type: [String],
+            default: [],
+        },
+        notes: {
+            type: String,
+            trim: true,
+            maxlength: [1000, 'Notes cannot exceed 1000 characters'],
+        },
+    },
+    {timestamps: true,}
+);
+
+WeightProgressSchema.index({userId: 1, date: -1});
+
+const PRExerciseSchema = new Schema<IPRExercise>(
+    {
+        userId: {
+            type: String,
+            required: [true, 'User ID is required'],
+            ref: 'User',
+            index: true,
+        },
+        name: {
+            type: String,
+            required: [true, 'Exercise name is required'],
+            trim: true,
+        },
+        unit: {
+            type: String,
+            enum: ['lbs', 'kg', 'reps', 'time'],
+            default: 'lbs',
+        },
+    },
+    { timestamps: true }
+);
+
+PRExerciseSchema.index({userId: 1, name: 1}, {unique: true});
+
+const PRProgressSchema = new Schema<IPRProgress>(
+    {
+        userId: {
+            type: String,
+            required: [true, 'User ID is required'],
+            ref: 'User',
+            index: true,
+        },
+        prExerciseId: {
+            type: String,
+            required: [true, 'PR Exercise ID is required'],
+            ref: 'PRExercise',
+            index: true,
+        },
+        value: {
+            type: Number,
+            required: [true, 'PR value is required'],
+            min: [0, 'PR value must be at least 0'],
+        },
+    },
+    { timestamps: true }
+);
+
+PRProgressSchema.index({userId: 1, prExerciseId: 1, createdAt: -1});
+
 const Progress = mongoose.model<IProgress>('Progress', ProgressSchema);
-export default Progress;
+const WeightProgress = mongoose.model<IWeightProgress>('WeightProgress', WeightProgressSchema);
+const PRExercise = mongoose.model<IPRExercise>('PRExercise', PRExerciseSchema);
+const PRProgress = mongoose.model<IPRProgress>('PRProgress', PRProgressSchema);
+export {Progress, WeightProgress, PRExercise, PRProgress};
