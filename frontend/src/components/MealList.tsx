@@ -21,7 +21,7 @@ const MealList: React.FC<MealListProps> = ({ onCreateMeal, onEditMeal, onDeleteM
                 undefined,
                 mealType || undefined
             );
-            console.log("API response:", res.data);
+            
             setMeals(res.data?.meals || []);
         } catch (err: any) {
             setError(err?.message || "Failed to load meals");

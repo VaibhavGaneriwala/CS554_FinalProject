@@ -84,6 +84,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       const response = await authService.register(data);
       if (response.success && response.data) {
         const { token, user } = response.data;
+        localStorage.setItem('justRegistered', 'true');
         authService.setToken(token);
         authService.setStoredUser(user);
         setUser(user);
