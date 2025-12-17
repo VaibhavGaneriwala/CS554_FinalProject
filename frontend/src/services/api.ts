@@ -30,6 +30,24 @@ api.interceptors.request.use(
 api.interceptors.response.use(
     (response) => response,
     (error: AxiosError) => {
+      const status = error.response?.status;
+      const hasToken = !!localStorage.getItem('token');
+      if (status === 401) {
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        const path = typeof window !== 'undefined' ? window.location.pathname : '';
+        if (path && path !== '/login' && path !== '/register') {
+          window.location.href = '/login';
+        }
+      }
+      if (!error.response && hasToken) {
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        const path = typeof window !== 'undefined' ? window.location.pathname : '';
+        if (path && path !== '/login' && path !== '/register') {
+          window.location.href = '/login';
+        }
+      }
       return Promise.reject(error);
     }
 );
