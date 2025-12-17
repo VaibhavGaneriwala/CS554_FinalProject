@@ -84,21 +84,6 @@ REACT_APP_API_URL=http://localhost:3002/api
 
 **Note**: If you change `BACKEND_PORT` or `FRONTEND_PORT`, make sure to also update `CORS_ORIGIN` and `REACT_APP_API_URL` accordingly. If you change the backend port, also set `PUBLIC_BACKEND_BASE_URL` (used for generating public file URLs).
 
-### Backend `.env` (when running backend outside Docker)
-
-Separately from Docker Compose port overrides, you may have a `backend/.env` for the backend runtime config when you run the backend locally (e.g., `npm run dev` inside `backend/`).
-
-For **Docker Compose**, you typically do **not** need `backend/.env` (Compose supplies env vars).
-
-For **local backend dev**, the backend expects at minimum:
-
-- `MONGO_URI` (required)
-- `REDIS_HOST` (required; defaults to empty string)
-- `MINIO_ENDPOINT` (required if you use uploads)
-- `CORS_ORIGIN` (should match where the frontend is running)
-
-See the “Running locally” section below for a copy/paste `backend/.env` example.
-
 ---
 
 ## Seed data (important)
@@ -185,101 +170,13 @@ Then restart containers:
 docker compose up --build
 ```
 
-### Set keys (local backend)
-
-Add the same variables to `backend/.env`, then restart `npm run dev`.
-
----
-
-## Running locally (dev mode)
-
-If you’re not comfortable installing MongoDB/Redis/MinIO locally, the easiest “local dev” setup is:
-
-- Run **MongoDB + Redis + MinIO** in Docker
-- Run **backend + frontend** on your machine
-
-### 1) Start dependencies (Docker)
-
-From the repo root:
-
-```bash
-docker compose up -d mongodb redis minio
-```
-
-### 2) Backend (local)
-
-Create `backend/.env` (example):
-
-```env
-# Core
-NODE_ENV=development
-PORT=3000
-
-# Mongo
-MONGO_URI=mongodb://localhost:27017/cs554-finalproject
-
-# Redis (required - redisHost defaults to empty string)
-REDIS_HOST=127.0.0.1
-REDIS_PORT=6379
-
-# MinIO
-MINIO_ENDPOINT=127.0.0.1
-MINIO_PORT=9000
-MINIO_ACCESS_KEY=minioadmin
-MINIO_SECRET_KEY=minioadmin
-MINIO_USE_SSL=false
-MINIO_BUCKET_NAME=cs554-finalproject
-
-# Used for building public file URLs served to the browser
-PUBLIC_BACKEND_BASE_URL=http://localhost:3000
-
-# Auth (safe defaults exist, but you can override)
-JWT_SECRET=dev-secret-change-me
-JWT_EXPIRES_IN=7d
-
-# CORS (frontend URL)
-CORS_ORIGIN=http://localhost:3001
-```
-
-Then run:
-
-```bash
-cd backend
-npm install
-npm run seed
-npm run dev
-```
-
-Notes:
-
-- `npm run seed` is **idempotent**. If you need to force a reseed locally: `SEED_FORCE=true npm run seed`
-
-### 3) Frontend (local)
-
-```bash
-cd frontend
-npm install
-npm start
-```
-
-Make sure the frontend points to the backend API:
-
-- Create `frontend/.env`:
-
-```env
-REACT_APP_API_URL=http://localhost:3000/api
-```
-
-Then open the URL that `npm start` prints (often `http://localhost:3001` if the backend is already using 3000).
-
 ---
 
 ## Troubleshooting
 
-- **Ports already in use**: change the ports in the root `.env` (Docker) or update `PORT` / `REACT_APP_API_URL` (local).
+- **Ports already in use**: change the ports in the root `.env`.
 - **“Seed skipped…” but you want fresh data**:
   - Docker: `docker compose run --rm -e SEED_FORCE=true seed`
-  - Local: `cd backend && SEED_FORCE=true npm run seed`
 - **Blank/failed image uploads**: ensure MinIO is running and `MINIO_*` env vars match where it’s reachable.
 
 ---
